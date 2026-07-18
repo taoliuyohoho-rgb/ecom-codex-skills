@@ -7,6 +7,8 @@ description: Use the team ecommerce MCP Router for text, JSON, image, and video 
 
 Use the team MCP Router instead of calling providers directly or inventing project-specific API key names.
 
+The team endpoint is `https://ai-router.metooloo.com/mcp`. Use the MCP client's OAuth flow when it is available; do not copy a bearer token from another user or ask an operator for provider keys.
+
 ## Tool selection
 
 - Text or JSON: `ecom_router_text_generate`
