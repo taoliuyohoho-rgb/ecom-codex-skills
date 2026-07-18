@@ -1,0 +1,40 @@
+- id: video-global-single-version-default
+  type: process_rule
+  scope: cross_project
+  status: active
+  rule: "Default to exactly one recommended version per generation round unless the user explicitly asks for multiple versions."
+- id: video-global-audio-required
+  type: process_rule
+  scope: cross_project
+  status: active
+  rule: "Default shipped video outputs should include both BGM and an explicit voice or sound plan unless the user explicitly waives audio."
+- id: video-global-script-confirmation-gate
+  type: gating_rule
+  scope: cross_project
+  status: active
+  rule: "Before generation, get explicit user confirmation on the script; script confirmation alone is sufficient unless another blocker would make execution untruthful or impossible."
+- id: video-global-spend-approval-gate
+  type: gating_rule
+  scope: cross_project
+  status: active
+  rule: "Before any paid generation, remix, dubbing, music, or other spendful provider action, stop and get explicit user approval."
+- id: video-global-real-asset-evidence-table
+  type: process_rule
+  scope: cross_project
+  status: active
+  rule: "For real-asset videos, create a beat-to-visual-evidence table before editing; include strong evidence, weak/fallback treatment, excluded assets, duplicate groups, and transition logic."
+- id: video-global-continuous-tts-default
+  type: process_rule
+  scope: cross_project
+  status: active
+  rule: "When using TTS for narration-led videos, prefer one continuous narration file with derived subtitle timing over sentence-by-sentence TTS stitching."
+- id: video-global-render-validation
+  type: review_rule
+  scope: cross_project
+  status: active
+  rule: "Before full render, validate media references and key stills; after render, verify audio/video streams, full decode, and key frames extracted from the final file."
+- id: video-global-render-engine-selection
+  type: process_rule
+  scope: cross_project
+  status: active
+  rule: "For simple localization or concat, existing ffmpeg/MoviePy scripts are fine; for complex local edits with many assets, captions, overlays, BGM/voice, and transitions, prefer Remotion or an equivalent data-driven timeline and keep AI providers to short hook/gapfill/source clips."
