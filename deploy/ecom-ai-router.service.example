@@ -1,0 +1,20 @@
+[Unit]
+Description=Ecommerce AI Router MCP
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ecom-ai-router/app
+EnvironmentFile=/opt/ecom-ai-router/router.env
+ExecStart=/usr/bin/node /opt/ecom-ai-router/app/mcp-server/dist/index.js
+Restart=always
+RestartSec=5
+User=ecomrouter
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/ecom-ai-router
+
+[Install]
+WantedBy=multi-user.target

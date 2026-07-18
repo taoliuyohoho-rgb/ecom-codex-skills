@@ -1,0 +1,7 @@
+node_modules/
+mcp-server/dist/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

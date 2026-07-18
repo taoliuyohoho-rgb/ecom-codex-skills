@@ -1,0 +1,21 @@
+{
+  "name": "ecom-codex-skills",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p mcp-server/tsconfig.json",
+    "start": "node mcp-server/dist/index.js",
+    "install-skills": "node install.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "express": "^5.1.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.15.0",
+    "typescript": "^5.7.3"
+  }
+}
