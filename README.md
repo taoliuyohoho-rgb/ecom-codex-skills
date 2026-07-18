@@ -21,4 +21,10 @@ Installation copies only skill instructions into the local Codex skills director
 
 The MCP service exposes text, image, and video tools at `/mcp` and a non-secret `/health` endpoint. Provider keys are loaded only by the server from a secret-managed environment. Clients must authenticate with the team-approved MCP transport; do not put the bearer token in this public repository.
 
+## Team Router
+
+- MCP endpoint: `https://ai-router.metooloo.com/mcp`
+- Health: `https://ai-router.metooloo.com/health`
+- Authentication: Feishu OAuth with PKCE; clients should follow the MCP OAuth metadata instead of asking operators for provider keys.
+
 The ecommerce Feishu protocol is the source for role boundaries, product facts, Skill publication status, writeback rules, and the current Router deployment status.
