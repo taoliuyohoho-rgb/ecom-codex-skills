@@ -1,0 +1,4 @@
+interface:
+  display_name: "Malay Ad Copy"
+  short_description: "Short Malaysia ecommerce ad copy"
+  default_prompt: "Use $malay-ad-copy-skill to write bilingual ad variants and a four-hashtag block."

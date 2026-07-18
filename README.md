@@ -5,6 +5,8 @@ Public, sanitized skills for the ecommerce team. The package contains:
 - `global-ai-router`: calls the team MCP Router without exposing provider keys.
 - `ecom-image-director`: identity-safe ecommerce image planning and output protocol.
 - `video-director-core`: shared video stage, approval, cost, shot-planning, review, and render-validation rules.
+- `shopee-my-detail-tags`: localized Chinese-English-Malay SEO tags, hashtags, and keyword alternatives for Shopee Malaysia.
+- `malay-ad-copy-skill`: short bilingual Malaysia ecommerce ad copy and fixed four-hashtag blocks for Shopee, Lazada, and TikTok Shop.
 - `mcp-server/`: the stateless Streamable HTTP MCP Router service.
 
 ## Install skills

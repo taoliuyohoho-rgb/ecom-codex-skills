@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shopee MY Detail Tags"
+  short_description: "Localized Shopee Malaysia SEO tags"
+  default_prompt: "Use $shopee-my-detail-tags to create aligned Chinese-English-Malay tags and keyword alternatives."
