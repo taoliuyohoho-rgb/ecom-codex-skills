@@ -4,6 +4,7 @@ Public, sanitized skills for the ecommerce team. The package contains:
 
 - `global-ai-router`: calls the team MCP Router without exposing provider keys.
 - `ecom-image-director`: identity-safe ecommerce image planning and output protocol.
+- `video-director-core`: shared video stage, approval, cost, shot-planning, review, and render-validation rules.
 - `mcp-server/`: the stateless Streamable HTTP MCP Router service.
 
 ## Install skills
@@ -15,7 +16,7 @@ npm install
 npm run install-skills
 ```
 
-Installation copies only skill instructions into the local Codex skills directory. It does not install or expose API keys.
+Installation copies only skill instructions into the local Codex skills directory. It does not install or expose API keys. `video-director-core` is a process skill and does not call a provider by itself; use `global-ai-router` for AI generation.
 
 ## MCP Router
 

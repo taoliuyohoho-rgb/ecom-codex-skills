@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video Director Core"
+  short_description: "Shared video planning and review gates"
+  default_prompt: "Use $video-director-core to plan a video workflow with clear script, approval, shot, cost, and review gates."
