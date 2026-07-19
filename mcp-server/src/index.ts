@@ -198,7 +198,8 @@ app.get("/oauth/authorize", (request, response) => {
   });
   const feishuUrl = new URL("https://open.feishu.cn/open-apis/authen/v1/index");
   feishuUrl.searchParams.set("app_id", feishuAppId!);
-  feishuUrl.searchParams.set("redirect_uri", `${oauthCallbackUrl}?redirect_uri=${encodeURIComponent(redirectUri)}`);
+  // URLSearchParams performs the outer encoding; keep the client callback URI raw here.
+  feishuUrl.searchParams.set("redirect_uri", `${oauthCallbackUrl}?redirect_uri=${redirectUri}`);
   feishuUrl.searchParams.set("state", internalState);
   response.redirect(feishuUrl.toString());
 });
