@@ -91,19 +91,35 @@ async function feishuAppAccessToken(): Promise<string> {
   return data.app_access_token;
 }
 
-async function exchangeFeishuCode(code: string): Promise<string> {
+async function exchangeFeishuCode(code: string, clientRedirectUri: string, codeVerifier?: string): Promise<string> {
   const appAccessToken = await feishuAppAccessToken();
   const result = await fetch("https://open.feishu.cn/open-apis/authen/v1/oidc/access_token", {
     method: "POST",
-    headers: {
-      authorization: `Bearer ${appAccessToken}`,
-      "content-type": "application/json",
-    },
+    headers: { authorization: `Bearer ${appAccessToken}`, "content-type": "application/json" },
     body: JSON.stringify({ grant_type: "authorization_code", code }),
   });
-  const data = await result.json() as { data?: { open_id?: string }; code?: number; msg?: string };
-  const openId = data.data?.open_id;
-  if (!result.ok || !openId) throw new Error(`Feishu user token failed: ${data.code || result.status}`);
+  const data = await result.json() as {
+    data?: { access_token?: string; token_type?: string; refresh_token?: string; expires_in?: number; scope?: string };
+    code?: number;
+    msg?: string;
+  };
+  const userAccessToken = data.data?.access_token;
+  if (!result.ok || !userAccessToken) {
+    throw new Error(`Feishu user token failed: http=${result.status} code=${data.code ?? "missing"} msg=${data.msg ?? "unknown"}`);
+  }
+
+  const userInfoResult = await fetch("https://open.feishu.cn/open-apis/authen/v1/user_info", {
+    headers: { authorization: `Bearer ${userAccessToken}` },
+  });
+  const userInfo = await userInfoResult.json() as {
+    code?: number;
+    msg?: string;
+    data?: { open_id?: string };
+  };
+  const openId = userInfo.data?.open_id;
+  if (!userInfoResult.ok || userInfo.code !== 0 || !openId) {
+    throw new Error(`Feishu user info failed: http=${userInfoResult.status} code=${userInfo.code ?? "missing"} msg=${userInfo.msg ?? "unknown"}`);
+  }
   return openId;
 }
 
@@ -158,7 +174,12 @@ app.get("/oauth/authorize", (request, response) => {
     response.status(404).json({ error: "oauth_not_configured" });
     return;
   }
-  const { client_id: clientId, redirect_uri: redirectUri, response_type: responseType, state, code_challenge: codeChallenge, code_challenge_method: codeChallengeMethod } = request.query;
+  const clientId = typeof request.query.client_id === "string" ? request.query.client_id : "";
+  const redirectUri = typeof request.query.redirect_uri === "string" ? request.query.redirect_uri : "";
+  const responseType = typeof request.query.response_type === "string" ? request.query.response_type : "";
+  const state = typeof request.query.state === "string" ? request.query.state : undefined;
+  const codeChallenge = typeof request.query.code_challenge === "string" ? request.query.code_challenge : undefined;
+  const codeChallengeMethod = typeof request.query.code_challenge_method === "string" ? request.query.code_challenge_method : undefined;
   if (responseType !== "code" || typeof clientId !== "string" || typeof redirectUri !== "string") {
     response.status(400).json({ error: "invalid_request" });
     return;
@@ -175,9 +196,9 @@ app.get("/oauth/authorize", (request, response) => {
     codeChallenge: typeof codeChallenge === "string" ? codeChallenge : undefined,
     expiresAt: Date.now() + oauthTtlMs,
   });
-  const feishuUrl = new URL("https://open.feishu.cn/open-apis/authen/v1/authorize");
+  const feishuUrl = new URL("https://open.feishu.cn/open-apis/authen/v1/index");
   feishuUrl.searchParams.set("app_id", feishuAppId!);
-  feishuUrl.searchParams.set("redirect_uri", oauthCallbackUrl);
+  feishuUrl.searchParams.set("redirect_uri", `${oauthCallbackUrl}?redirect_uri=${encodeURIComponent(redirectUri)}`);
   feishuUrl.searchParams.set("state", internalState);
   response.redirect(feishuUrl.toString());
 });
@@ -192,7 +213,12 @@ app.get("/oauth/feishu/callback", async (request, response) => {
     return;
   }
   try {
-    const userOpenId = await exchangeFeishuCode(code);
+    const clientRedirectUri = typeof request.query.redirect_uri === "string" ? request.query.redirect_uri : "";
+    if (clientRedirectUri !== pending.redirectUri) {
+      response.status(400).send("OAuth redirect URI mismatch");
+      return;
+    }
+    const userOpenId = await exchangeFeishuCode(code, clientRedirectUri, pending.codeChallenge);
     const authCode = randomToken("ac_");
     oauthCodes.set(authCode, { ...pending, userOpenId, expiresAt: Date.now() + oauthTtlMs });
     const redirect = new URL(pending.redirectUri);

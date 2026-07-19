@@ -28,6 +28,6 @@ The MCP service exposes text, image, and video tools at `/mcp` and a non-secret 
 
 - MCP endpoint: `https://ai-router.metooloo.com/mcp`
 - Health: `https://ai-router.metooloo.com/health`
-- Authentication: Feishu OAuth with PKCE; clients should follow the MCP OAuth metadata instead of asking operators for provider keys.
+- Authentication: Feishu OIDC OAuth with PKCE; clients should follow the MCP OAuth metadata instead of asking operators for provider keys. The Router proxies the Feishu OIDC authorization code exchange server-side and then returns a short-lived MCP token to the client.
 
 The ecommerce Feishu protocol is the source for role boundaries, product facts, Skill publication status, writeback rules, and the current Router deployment status.
