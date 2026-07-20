@@ -48,6 +48,7 @@
         "sample_approved",
         "full_pack_generated",
         "full_pack_reviewed",
+        "pack_approved",
         "delivered",
         "written_back"
       ]

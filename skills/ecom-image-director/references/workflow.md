@@ -64,11 +64,15 @@ Applies to `listing_pack` or approved multi-image work. Assign one mission to ea
 
 Review identity and claims on every image. Review slot coverage across the pack. Any critical fail blocks approval of the entire pack until fixed or explicitly removed.
 
-### 9. `delivered`
+### 9. `pack_approved`
+
+Evidence: the named human approver accepted the complete reviewed pack, its included/excluded assets, and its delivery scope. A passing automated review does not create this approval.
+
+### 10. `delivered`
 
 Assets are uploaded to the approved delivery location and linked from the relevant Feishu task/Listing/content record. `delivered` does not mean `published`.
 
-### 10. `written_back`
+### 11. `written_back`
 
 Record skill version, direction, reference, provider/model, assets, review, approval state, failure codes, owner, and next action. Only platform evidence can advance state to `published`.
 
