@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ecommerce Image Director Result",
+  "type": "object",
+  "required": [
+    "skill_version",
+    "sku",
+    "mode",
+    "platform",
+    "market",
+    "status",
+    "current_gate",
+    "directions",
+    "reference_plan",
+    "approval",
+    "assets",
+    "review",
+    "writeback",
+    "next_action"
+  ],
+  "properties": {
+    "skill_version": {"type": "string"},
+    "sku": {"type": "string", "minLength": 1},
+    "product_name": {"type": "string"},
+    "mode": {"enum": ["refresh", "generate", "listing_pack", "review"]},
+    "platform": {"type": "string", "minLength": 1},
+    "market": {"type": "string", "minLength": 1},
+    "slot": {"type": ["string", "integer", "null"]},
+    "status": {
+      "enum": [
+        "blocked",
+        "planned",
+        "generated_unreviewed",
+        "reviewed",
+        "approved",
+        "delivered",
+        "published",
+        "concept_only"
+      ]
+    },
+    "current_gate": {
+      "enum": [
+        "context_ready",
+        "directions_proposed",
+        "direction_approved",
+        "sample_generated",
+        "sample_reviewed",
+        "sample_approved",
+        "full_pack_generated",
+        "full_pack_reviewed",
+        "delivered",
+        "written_back"
+      ]
+    },
+    "known_facts": {"type": "array", "items": {"type": "string"}},
+    "gaps": {"type": "array", "items": {"type": "string"}},
+    "directions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "slot_mission", "proof", "must_show", "avoid", "recommended"],
+        "properties": {
+          "name": {"type": "string"},
+          "slot_mission": {"type": "string"},
+          "proof": {"type": "string"},
+          "must_show": {"type": "array", "items": {"type": "string"}},
+          "avoid": {"type": "array", "items": {"type": "string"}},
+          "recommended": {"type": "boolean"}
+        }
+      }
+    },
+    "reference_plan": {
+      "type": "object",
+      "required": ["required", "source", "router_supported"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "source": {"type": ["string", "null"]},
+        "router_supported": {"type": "boolean"}
+      }
+    },
+    "router": {
+      "type": ["object", "null"],
+      "properties": {
+        "tool": {"const": "ecom_router_image_generate"},
+        "provider": {"type": ["string", "null"]},
+        "model": {"type": ["string", "null"]},
+        "status": {"type": ["string", "null"]},
+        "request_id": {"type": ["string", "null"]},
+        "cost": {"type": ["number", "string", "null"]}
+      }
+    },
+    "approval": {
+      "type": "object",
+      "required": ["state", "approver"],
+      "properties": {
+        "state": {"enum": ["not_requested", "pending", "approved", "changes_requested", "rejected"]},
+        "approver": {"type": ["string", "null"]},
+        "approved_scope": {"type": ["string", "null"]}
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "url", "state"],
+        "properties": {
+          "kind": {"enum": ["sample", "full_pack", "detail", "review"]},
+          "url": {"type": "string"},
+          "state": {"enum": ["generated", "reviewed", "approved", "delivered", "published"]}
+        }
+      }
+    },
+    "review": {
+      "type": ["object", "null"],
+      "properties": {
+        "decision": {"enum": ["pass", "warn", "fail"]},
+        "failure_codes": {"type": "array", "items": {"type": "string"}},
+        "human_approval_required": {"type": "boolean"}
+      }
+    },
+    "writeback": {
+      "type": "object",
+      "required": ["target", "completed"],
+      "properties": {
+        "target": {"type": "string"},
+        "completed": {"type": "boolean"},
+        "record_or_doc_url": {"type": ["string", "null"]}
+      }
+    },
+    "next_action": {"type": "string"},
+    "next_owner": {"type": ["string", "null"]}
+  },
+  "additionalProperties": true
+}

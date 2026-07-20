@@ -9,7 +9,8 @@
     "install-skills": "node install.mjs",
     "validate-skills": "node scripts/validate-skills.mjs",
     "test-install": "node scripts/test-install.mjs",
-    "test": "npm run build && npm run validate-skills && npm run test-install"
+    "test-image-skill": "node scripts/test-image-skill.mjs",
+    "test": "npm run build && npm run validate-skills && npm run test-image-skill && npm run test-install"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.5",

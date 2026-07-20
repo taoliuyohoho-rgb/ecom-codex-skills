@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ecommerce Image Director"
+  short_description: "Identity-safe ecommerce image workflow"
+  default_prompt: "Use $ecom-image-director to read shared product truth, propose image directions, generate one SKU-anchored sample through the team Router, review it, and write back the result."
