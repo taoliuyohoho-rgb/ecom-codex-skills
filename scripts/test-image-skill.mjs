@@ -127,6 +127,19 @@ conceptDelivered.current_gate = "directions_proposed";
 conceptDelivered.assets = [{ kind: "sample", url: "https://example.com/concept", state: "delivered", approval_ref: "concept", platform_evidence: null }];
 expectInvalid("concept-only delivery", conceptDelivered);
 
+const deliveredWrittenBackOperator = structuredClone(adminDelivered);
+deliveredWrittenBackOperator.status = "delivered";
+deliveredWrittenBackOperator.current_gate = "written_back";
+deliveredWrittenBackOperator.approvals[2].approver_role = "operator";
+expectInvalid("delivered+written_back with operator pack approval", deliveredWrittenBackOperator);
+
+const publishedWrittenBackOperator = structuredClone(adminDelivered);
+publishedWrittenBackOperator.status = "published";
+publishedWrittenBackOperator.current_gate = "written_back";
+publishedWrittenBackOperator.approvals[2].approver_role = "operator";
+publishedWrittenBackOperator.assets[0] = { kind: "full_pack", url: "https://example.com/pack", state: "published", approval_ref: "pack-operator", platform_evidence: "https://platform.example/item" };
+expectInvalid("published+written_back with operator pack approval", publishedWrittenBackOperator);
+
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);

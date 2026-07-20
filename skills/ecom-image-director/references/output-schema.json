@@ -197,6 +197,38 @@
       }
     },
     {
+      "if": {
+        "anyOf": [
+          {"properties": {"status": {"const": "delivered"}}},
+          {"properties": {"status": {"const": "published"}}}
+        ]
+      },
+      "then": {
+        "properties": {
+          "approvals": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "stage": {"const": "pack"},
+                "state": {"const": "approved"},
+                "approver_role": {"const": "admin"}
+              },
+              "required": ["stage", "state", "approver_role"],
+              "additionalProperties": true
+            }
+          },
+          "assets": {
+            "contains": {
+              "anyOf": [
+                {"properties": {"state": {"const": "delivered"}}},
+                {"properties": {"state": {"const": "published"}}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
       "if": {"properties": {"status": {"const": "approved"}}},
       "then": {"properties": {"current_gate": {"enum": ["sample_approved", "pack_approved", "delivered", "written_back"]}}}
     },
@@ -204,8 +236,7 @@
       "if": {"properties": {"status": {"const": "delivered"}}},
       "then": {
         "properties": {
-          "current_gate": {"enum": ["delivered", "written_back"]},
-          "assets": {"contains": {"properties": {"state": {"const": "delivered"}}, "required": ["state"]}}
+          "current_gate": {"enum": ["delivered", "written_back"]}
         }
       }
     },
