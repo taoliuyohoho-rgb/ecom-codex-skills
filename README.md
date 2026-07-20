@@ -30,4 +30,8 @@ The MCP service exposes text, image, and video tools at `/mcp` and a non-secret 
 - Health: `https://ai-router.metooloo.com/health`
 - Authentication: Feishu OIDC OAuth with PKCE; clients should follow the MCP OAuth metadata instead of asking operators for provider keys. The Router proxies the Feishu OIDC authorization code exchange server-side and then returns a short-lived MCP token to the client.
 
+## Contributing
+
+Team members change shared skills through Git branches and pull requests. Repository collaborators can push a branch directly; teammates without write access can fork the public repository and submit a pull request. Run `npm test` before requesting review. See [CONTRIBUTING.md](CONTRIBUTING.md) for the exact workflow and image-skill evidence requirements.
+
 The ecommerce Feishu protocol is the source for role boundaries, product facts, Skill publication status, writeback rules, and the current Router deployment status.
