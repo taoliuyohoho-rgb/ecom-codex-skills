@@ -34,6 +34,6 @@ The MCP service exposes text, image, and video tools at `/mcp` and a non-secret 
 
 Team members change shared skills through Git branches and pull requests. Repository collaborators can push a branch directly; teammates without write access can fork the public repository and submit a pull request. Run `npm test` before requesting review. See [CONTRIBUTING.md](CONTRIBUTING.md) for the exact workflow and image-skill evidence requirements.
 
-Before production work, each teammate should pass the [team collaboration smoke test](docs/team-collaboration-smoke-test.md). It separately verifies Feishu business access, skill installation, Router OAuth, pull-request contribution, and image handoff behavior.
+Before production work, each teammate should read the [team usage guide](docs/TEAM_USAGE.md) and pass the [team collaboration smoke test](docs/team-collaboration-smoke-test.md). Together they define the Feishu knowledge, published Skill, approval, Router, review, writeback, and knowledge-governance flow.
 
 The ecommerce Feishu protocol is the source for role boundaries, product facts, Skill publication status, writeback rules, and the current Router deployment status.

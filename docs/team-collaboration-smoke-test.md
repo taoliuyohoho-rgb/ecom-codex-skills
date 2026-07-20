@@ -2,6 +2,8 @@
 
 Passing this test means a teammate can use and improve the shared ecommerce workflow. Repository access alone is not enough.
 
+Read [TEAM_USAGE.md](TEAM_USAGE.md) first. It defines the required Feishu knowledge -> published Skill -> approval -> MCP -> review -> writeback sequence, plus Admin/global and individual knowledge boundaries.
+
 ## Preconditions
 
 - The teammate has a GitHub account.
