@@ -106,12 +106,16 @@ for (const entry of entries) {
 }
 
 let scannedRepoFiles = 0;
+let secretsFound = 0;
 for (const file of await walk(repoPath)) {
   if (!textExtensions.has(extname(file))) continue;
   try {
     const content = await readFile(file, "utf8");
     for (const pattern of forbidden) {
-      if (pattern.test(content)) throw new Error(`${file}: possible secret detected`);
+      if (pattern.test(content)) {
+        secretsFound += 1;
+        throw new Error(`${file}: possible secret detected`);
+      }
     }
     scannedRepoFiles += 1;
   } catch (error) {
@@ -123,4 +127,4 @@ if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-console.log(`Validated ${checked} shared skills across ${checkedFiles} skill assets; scanned ${scannedRepoFiles} repository text files for secrets.`);
+console.log(`Validated ${checked} shared skills across ${checkedFiles} skill assets; scanned ${scannedRepoFiles} repository text files for secrets (${secretsFound} found).`);
