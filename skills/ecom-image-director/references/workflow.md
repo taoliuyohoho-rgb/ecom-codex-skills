@@ -15,6 +15,10 @@ Prefer `refresh` or deterministic compositing over `generate` when it can preser
 
 ## State Machine
 
+### 0. `context_pending`
+
+Use when a critical product fact, permission, reference, task field, or writeback target is missing or conflicting. Return `blocked` with the exact resource and owner needed. Do not claim `context_ready`.
+
 ### 1. `context_ready`
 
 Required evidence:

@@ -33,7 +33,7 @@ for (const status of ["blocked", "generated_unreviewed", "approved", "delivered"
   if (!statuses.has(status)) failures.push(`Output schema missing status '${status}'`);
 }
 const gates = new Set(schema.properties?.current_gate?.enum || []);
-for (const gate of ["context_ready", "direction_approved", "sample_reviewed", "sample_approved", "pack_approved", "written_back"]) {
+for (const gate of ["context_pending", "context_ready", "direction_approved", "sample_reviewed", "sample_approved", "pack_approved", "written_back"]) {
   if (!gates.has(gate)) failures.push(`Output schema missing gate '${gate}'`);
 }
 if (schema.properties?.router?.properties?.tool?.const !== "ecom_router_image_generate") {
