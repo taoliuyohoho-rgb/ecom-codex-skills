@@ -70,7 +70,7 @@ Review identity and claims on every image. Review slot coverage across the pack.
 
 ### 9. `pack_approved`
 
-Evidence: the named human approver accepted the complete reviewed pack, its included/excluded assets, and its delivery scope. A passing automated review does not create this approval.
+Evidence: an `admin` approver accepted the complete reviewed pack, its included/excluded assets, and its delivery scope. Record approver identity and `approver_role=admin`. An operator or a passing automated review cannot create this approval.
 
 ### 10. `delivered`
 

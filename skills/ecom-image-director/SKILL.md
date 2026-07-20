@@ -38,7 +38,7 @@ Collect the minimum input contract:
 - real SKU/reference image and its source;
 - budget/quality boundary;
 - intended asset and Feishu writeback locations;
-- approver.
+- direction/sample approver and Admin pack approver.
 
 If a critical fact conflicts or is missing, return `blocked` with the exact resource and owner needed. Do not guess.
 
@@ -131,7 +131,8 @@ Write back according to [references/writeback.md](references/writeback.md). At m
 - approved direction and reference source;
 - provider/model and generation status;
 - sample/full-pack asset links;
-- review decision, failure codes, and approver;
+- review decision and failure codes;
+- approval ledger with stage, approver identity, approver role, approved scope, real-call authorization, and timestamp; complete-pack approval requires `approver_role=admin`;
 - state: `planned`, `generated_unreviewed`, `reviewed`, `approved`, `delivered`, or `published`;
 - next action and owner.
 
@@ -144,7 +145,7 @@ Return the fields defined in [references/output-schema.json](references/output-s
 1. known facts and gaps;
 2. current gate/status;
 3. recommended direction or review decision;
-4. next action, approver, and writeback location.
+4. next action, required approver/role, and writeback location.
 
 ## Common Pitfalls
 
@@ -163,7 +164,8 @@ Return the fields defined in [references/output-schema.json](references/output-s
 - [ ] A readable real SKU reference is attached for identity-sensitive work.
 - [ ] Platform, market, audience, slot mission, claims, and writeback are explicit.
 - [ ] 2-3 directions were presented and one approved.
+- [ ] Direction approval and separate real-call authorization were recorded before Router execution.
 - [ ] Only the approved sample scope was generated.
 - [ ] Review rubric completed; all hard failures blocked expansion.
-- [ ] Human approval recorded before full-pack approval.
+- [ ] Sample approval was recorded before expansion; Admin pack approval was recorded before delivery.
 - [ ] Final assets, version, state, evidence, and next action were written back.

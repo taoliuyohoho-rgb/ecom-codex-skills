@@ -4,7 +4,7 @@ Writeback closes the team loop. It does not turn generated output into approved 
 
 ## Canonical Locations
 
-- Product identity, specification, price, inventory, lifecycle, compliance, and approved claims: `马来电商-商品策略 / 商品主数据` and approved strategy records. Image work normally reads these; it does not modify them.
+- Product identity, specification, price, inventory, lifecycle, compliance, and approved claims: `马来电商-商品策略 / 商品主数据` and approved strategy records. Image work reads these and must not modify them.
 - Operational task, owner, stage, approval, output link, and next action: `马来电商-运营工作台` or the linked image/Listing task.
 - Listing image version and platform state: `马来电商-店铺运营 / Listing` or its optimization/task record.
 - Shared method candidates and published skill version: `马来电商-SOP与知识库 / 共享 Skill 注册表` and the Git repository.
@@ -14,9 +14,9 @@ Writeback closes the team loop. It does not turn generated output into approved 
 
 ### Operator
 
-May update assigned operational tasks, Listing/content status, asset links, issues, and review feedback. May propose a method change through a Git branch/PR or a Feishu candidate.
+May update assigned operational workflow states, asset links, issues, and review feedback. `published` may be written only after reading a real platform URL or equivalent platform evidence. May propose a method change through a Git branch/PR or a Feishu candidate.
 
-May not approve changes to product truth, compliance, strategy, or the published shared skill by themselves.
+May not modify product master truth, approve changes to product truth/compliance/strategy, approve a complete image pack, or publish the shared Skill by themselves.
 
 ### Admin
 
@@ -36,14 +36,15 @@ Reference asset source
 Provider / model / Router status
 Sample and final asset links
 Review decision and failure codes
-Approval state and approver
-Delivery/publish state
+Approval ledger: stage, state, approver identity, approver role, approved scope, real-call authorization, and timestamp
+Delivery/publish state and required evidence
 Next action and owner
 Evidence or benchmark links
 ```
 
 ## State Semantics
 
+- `concept_only`: no usable identity-safe final path exists; the artifact is for direction discussion only and cannot enter sample/full-pack approval, delivery, or publication.
 - `planned`: context/direction exists; no generated asset.
 - `generated_unreviewed`: provider returned an asset; no completed review.
 - `reviewed`: rubric completed; may still be warn/fail.

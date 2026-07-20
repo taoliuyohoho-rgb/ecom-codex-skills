@@ -12,7 +12,7 @@
     "current_gate",
     "directions",
     "reference_plan",
-    "approval",
+    "approvals",
     "assets",
     "review",
     "writeback",
@@ -68,7 +68,8 @@
           "must_show": {"type": "array", "items": {"type": "string"}},
           "avoid": {"type": "array", "items": {"type": "string"}},
           "recommended": {"type": "boolean"}
-        }
+        },
+        "additionalProperties": true
       }
     },
     "reference_plan": {
@@ -78,7 +79,8 @@
         "required": {"type": "boolean"},
         "source": {"type": ["string", "null"]},
         "router_supported": {"type": "boolean"}
-      }
+      },
+      "additionalProperties": true
     },
     "router": {
       "type": ["object", "null"],
@@ -89,27 +91,50 @@
         "status": {"type": ["string", "null"]},
         "request_id": {"type": ["string", "null"]},
         "cost": {"type": ["number", "string", "null"]}
-      }
+      },
+      "required": ["tool", "status"],
+      "additionalProperties": true
     },
-    "approval": {
-      "type": "object",
-      "required": ["state", "approver"],
-      "properties": {
-        "state": {"enum": ["not_requested", "pending", "approved", "changes_requested", "rejected"]},
-        "approver": {"type": ["string", "null"]},
-        "approved_scope": {"type": ["string", "null"]}
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "state", "approver", "approver_role", "approved_scope", "real_call_authorized"],
+        "properties": {
+          "stage": {"enum": ["direction", "sample", "pack"]},
+          "state": {"enum": ["not_requested", "pending", "approved", "changes_requested", "rejected"]},
+          "approver": {"type": ["string", "null"]},
+          "approver_role": {"enum": ["operator", "admin", null]},
+          "approved_scope": {"type": ["string", "null"]},
+          "real_call_authorized": {"type": "boolean"},
+          "approved_at": {"type": ["string", "null"]}
+        },
+        "additionalProperties": true
       }
     },
     "assets": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["kind", "url", "state"],
+        "required": ["kind", "url", "state", "approval_ref", "platform_evidence"],
         "properties": {
           "kind": {"enum": ["sample", "full_pack", "detail", "review"]},
-          "url": {"type": "string"},
-          "state": {"enum": ["generated", "reviewed", "approved", "delivered", "published"]}
-        }
+          "url": {"type": "string", "minLength": 1},
+          "state": {"enum": ["generated", "reviewed", "approved", "delivered", "published"]},
+          "approval_ref": {"type": ["string", "null"]},
+          "platform_evidence": {"type": ["string", "null"]}
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"state": {"enum": ["approved", "delivered", "published"]}}},
+            "then": {"properties": {"approval_ref": {"type": "string", "minLength": 1}}}
+          },
+          {
+            "if": {"properties": {"state": {"const": "published"}}},
+            "then": {"properties": {"platform_evidence": {"type": "string", "minLength": 1}}}
+          }
+        ],
+        "additionalProperties": true
       }
     },
     "review": {
@@ -118,7 +143,8 @@
         "decision": {"enum": ["pass", "warn", "fail"]},
         "failure_codes": {"type": "array", "items": {"type": "string"}},
         "human_approval_required": {"type": "boolean"}
-      }
+      },
+      "additionalProperties": true
     },
     "writeback": {
       "type": "object",
@@ -127,10 +153,90 @@
         "target": {"type": "string"},
         "completed": {"type": "boolean"},
         "record_or_doc_url": {"type": ["string", "null"]}
-      }
+      },
+      "additionalProperties": true
     },
     "next_action": {"type": "string"},
     "next_owner": {"type": ["string", "null"]}
   },
+  "allOf": [
+    {
+      "if": {"properties": {"router": {"type": "object"}}, "required": ["router"]},
+      "then": {
+        "properties": {
+          "approvals": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "stage": {"const": "direction"},
+                "state": {"const": "approved"},
+                "real_call_authorized": {"const": true}
+              },
+              "required": ["stage", "state", "real_call_authorized"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"current_gate": {"enum": ["pack_approved", "delivered"]}}},
+      "then": {
+        "properties": {
+          "approvals": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "stage": {"const": "pack"},
+                "state": {"const": "approved"},
+                "approver_role": {"const": "admin"}
+              },
+              "required": ["stage", "state", "approver_role"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "approved"}}},
+      "then": {"properties": {"current_gate": {"enum": ["sample_approved", "pack_approved", "delivered", "written_back"]}}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "delivered"}}},
+      "then": {
+        "properties": {
+          "current_gate": {"enum": ["delivered", "written_back"]},
+          "assets": {"contains": {"properties": {"state": {"const": "delivered"}}, "required": ["state"]}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "published"}}},
+      "then": {
+        "properties": {
+          "current_gate": {"const": "written_back"},
+          "assets": {
+            "contains": {
+              "properties": {
+                "state": {"const": "published"},
+                "platform_evidence": {"type": "string", "minLength": 1}
+              },
+              "required": ["state", "platform_evidence"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "concept_only"}}},
+      "then": {
+        "properties": {
+          "current_gate": {"enum": ["context_pending", "context_ready", "directions_proposed"]},
+          "assets": {
+            "not": {"contains": {"properties": {"state": {"enum": ["approved", "delivered", "published"]}}, "required": ["state"]}}
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": true
 }

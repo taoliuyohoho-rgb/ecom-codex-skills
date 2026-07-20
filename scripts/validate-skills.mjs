@@ -4,12 +4,15 @@ import { access, readFile, readdir } from "node:fs/promises";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import process from "node:process";
 
-const rootPath = resolve(new URL("../skills/", import.meta.url).pathname);
+const repoPath = resolve(new URL("../", import.meta.url).pathname);
+const rootPath = join(repoPath, "skills");
 const forbidden = [
   /(?:api[_-]?key|app[_-]?secret|access[_-]?token|bearer[_-]?token)\s*[:=]\s*["']?[A-Za-z0-9_\-]{16,}/i,
+  /\b(?:sk-[A-Za-z0-9_-]{20,}|AIza[A-Za-z0-9_-]{30,}|gh[oprsu]_[A-Za-z0-9_]{30,}|xox[baprs]-[A-Za-z0-9-]{20,})\b/,
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
 ];
-const textExtensions = new Set([".md", ".json", ".yaml", ".yml", ".js", ".mjs", ".ts", ".py", ".txt"]);
+const textExtensions = new Set([".md", ".json", ".yaml", ".yml", ".js", ".mjs", ".ts", ".py", ".txt", ".toml"]);
+const ignoredDirectories = new Set([".git", "node_modules", "dist", "coverage"]);
 
 function parseFrontmatter(content, file) {
   if (!content.startsWith("---\n")) throw new Error(`${file}: frontmatter must start at byte zero`);
@@ -32,6 +35,7 @@ function parseFrontmatter(content, file) {
 async function walk(path) {
   const files = [];
   for (const entry of await readdir(path, { withFileTypes: true })) {
+    if (entry.isDirectory() && ignoredDirectories.has(entry.name)) continue;
     const child = join(path, entry.name);
     if (entry.isDirectory()) files.push(...await walk(child));
     else files.push(child);
@@ -92,9 +96,6 @@ for (const entry of entries) {
     if (!textExtensions.has(extname(file))) continue;
     try {
       const content = await readFile(file, "utf8");
-      for (const pattern of forbidden) {
-        if (pattern.test(content)) throw new Error(`${file}: possible secret detected`);
-      }
       if (extname(file) === ".json") JSON.parse(content);
       if (extname(file) === ".md") await validateMarkdownLinks(content, file);
       checkedFiles += 1;
@@ -104,8 +105,22 @@ for (const entry of entries) {
   }
 }
 
+let scannedRepoFiles = 0;
+for (const file of await walk(repoPath)) {
+  if (!textExtensions.has(extname(file))) continue;
+  try {
+    const content = await readFile(file, "utf8");
+    for (const pattern of forbidden) {
+      if (pattern.test(content)) throw new Error(`${file}: possible secret detected`);
+    }
+    scannedRepoFiles += 1;
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
+  }
+}
+
 if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-console.log(`Validated ${checked} shared skills across ${checkedFiles} text assets.`);
+console.log(`Validated ${checked} shared skills across ${checkedFiles} skill assets; scanned ${scannedRepoFiles} repository text files for secrets.`);
