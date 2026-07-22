@@ -35,10 +35,17 @@ type OAuthState = {
   expiresAt: number;
 };
 type OAuthCode = OAuthState & { userOpenId: string };
+type OAuthClient = {
+  redirectUris: string[];
+  clientName?: string;
+  expiresAt: number;
+};
 const oauthStates = new Map<string, OAuthState>();
 const oauthCodes = new Map<string, OAuthCode>();
 const accessTokens = new Map<string, { userOpenId: string; expiresAt: number }>();
+const oauthClients = new Map<string, OAuthClient>();
 const oauthTtlMs = 10 * 60 * 1000;
+const oauthClientTtlMs = 24 * 60 * 60 * 1000;
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: maxBodyBytes }));
@@ -123,11 +130,22 @@ async function exchangeFeishuCode(code: string, clientRedirectUri: string, codeV
   return openId;
 }
 
+function isValidRedirectUri(value: unknown): value is string {
+  if (typeof value !== "string" || value.length > 2_000) return false;
+  try {
+    const uri = new URL(value);
+    return uri.protocol === "http:" || uri.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function oauthMetadata() {
   return {
     issuer: publicBaseUrl,
     authorization_endpoint: `${publicBaseUrl}/oauth/authorize`,
     token_endpoint: `${publicBaseUrl}/oauth/token`,
+    registration_endpoint: `${publicBaseUrl}/register`,
     response_types_supported: ["code"],
     grant_types_supported: ["authorization_code"],
     code_challenge_methods_supported: ["S256"],
@@ -169,6 +187,37 @@ app.get("/.well-known/oauth-authorization-server", (_request, response) => {
   response.json(oauthMetadata());
 });
 
+app.post("/register", (request, response) => {
+  if (!oauthEnabled) {
+    response.status(404).json({ error: "oauth_not_configured" });
+    return;
+  }
+
+  const body = request.body as Record<string, unknown>;
+  const redirectUris = Array.isArray(body.redirect_uris)
+    ? body.redirect_uris.filter(isValidRedirectUri)
+    : [];
+  if (!redirectUris.length) {
+    response.status(400).json({ error: "invalid_client_metadata", error_description: "redirect_uris must contain at least one http(s) URI" });
+    return;
+  }
+
+  const clientId = randomToken("client_");
+  const clientName = typeof body.client_name === "string" && body.client_name.length <= 200
+    ? body.client_name
+    : undefined;
+  oauthClients.set(clientId, { redirectUris, clientName, expiresAt: Date.now() + oauthClientTtlMs });
+  response.status(201).json({
+    client_id: clientId,
+    client_id_issued_at: Math.floor(Date.now() / 1_000),
+    token_endpoint_auth_method: "none",
+    grant_types: ["authorization_code"],
+    response_types: ["code"],
+    redirect_uris: redirectUris,
+    ...(clientName ? { client_name: clientName } : {}),
+  });
+});
+
 app.get("/oauth/authorize", (request, response) => {
   if (!oauthEnabled) {
     response.status(404).json({ error: "oauth_not_configured" });
@@ -180,7 +229,12 @@ app.get("/oauth/authorize", (request, response) => {
   const state = typeof request.query.state === "string" ? request.query.state : undefined;
   const codeChallenge = typeof request.query.code_challenge === "string" ? request.query.code_challenge : undefined;
   const codeChallengeMethod = typeof request.query.code_challenge_method === "string" ? request.query.code_challenge_method : undefined;
-  if (responseType !== "code" || typeof clientId !== "string" || typeof redirectUri !== "string") {
+  const client = oauthClients.get(clientId);
+  if (!client || client.expiresAt < Date.now() || !client.redirectUris.includes(redirectUri)) {
+    response.status(400).json({ error: "invalid_client" });
+    return;
+  }
+  if (responseType !== "code" || !isValidRedirectUri(redirectUri)) {
     response.status(400).json({ error: "invalid_request" });
     return;
   }
