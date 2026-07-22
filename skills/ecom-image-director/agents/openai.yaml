@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ecommerce Image Director"
+  short_description: "Identity-safe ecommerce image workflow"
+  default_prompt: "Use $ecom-image-director to read shared product truth and propose 2-3 image directions. Stop after recommending one direction. Do not call the Router until direction approval and separate real-call authorization are recorded; then generate only the approved sample, review it, and stop again for sample approval before any expansion."
