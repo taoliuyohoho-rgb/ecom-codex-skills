@@ -54,7 +54,7 @@ async function validateMarkdownLinks(content, file) {
   }
 }
 
-function validateImageDirector(content, file) {
+function validateNineImages(content, file) {
   const required = [
     "context_ready",
     "direction_approved",
@@ -64,6 +64,8 @@ function validateImageDirector(content, file) {
     "ecom_router_image_generate",
     "referenceImage",
     "马来电商-商品策略 / 商品主数据",
+    "Slot | Mission",
+    "exactly nine",
   ];
   for (const token of required) {
     if (!content.includes(token)) throw new Error(`${file}: missing required image workflow token '${token}'`);
@@ -85,7 +87,7 @@ for (const entry of entries) {
     if (values.name !== basename(entry.name)) {
       throw new Error(`${skillFile}: name '${values.name}' must match directory '${entry.name}'`);
     }
-    if (entry.name === "ecom-image-director") validateImageDirector(skillContent, skillFile);
+    if (entry.name === "ecom-nine-images") validateNineImages(skillContent, skillFile);
     checked += 1;
   } catch (error) {
     errors.push(error instanceof Error ? error.message : String(error));
