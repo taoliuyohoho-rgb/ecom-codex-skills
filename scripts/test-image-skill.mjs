@@ -3,11 +3,11 @@
 import { readFile } from "node:fs/promises";
 import Ajv2020 from "ajv/dist/2020.js";
 
-const skillUrl = new URL("../skills/ecom-image-director/SKILL.md", import.meta.url);
-const workflowUrl = new URL("../skills/ecom-image-director/references/workflow.md", import.meta.url);
-const rubricUrl = new URL("../skills/ecom-image-director/references/review-rubric.md", import.meta.url);
-const schemaUrl = new URL("../skills/ecom-image-director/references/output-schema.json", import.meta.url);
-const interfaceUrl = new URL("../skills/ecom-image-director/agents/openai.yaml", import.meta.url);
+const skillUrl = new URL("../skills/ecom-nine-images/SKILL.md", import.meta.url);
+const workflowUrl = new URL("../skills/ecom-nine-images/references/workflow.md", import.meta.url);
+const rubricUrl = new URL("../skills/ecom-nine-images/references/review-rubric.md", import.meta.url);
+const schemaUrl = new URL("../skills/ecom-nine-images/references/output-schema.json", import.meta.url);
+const interfaceUrl = new URL("../skills/ecom-nine-images/agents/openai.yaml", import.meta.url);
 
 const [skill, workflow, rubric, schemaText, interfaceText] = await Promise.all([
   readFile(skillUrl, "utf8"),
@@ -24,7 +24,11 @@ function requireText(haystack, needle, reason) {
 }
 
 requireText(skill, "return `blocked`", "Missing-context behavior");
-requireText(skill, "Text-only generation is not an identity-safe fallback", "Reference enforcement");
+requireText(skill, "Text-only generation is not identity-safe", "Reference enforcement");
+requireText(skill, "exactly nine", "Nine-image pack cardinality");
+for (let slot = 1; slot <= 9; slot += 1) {
+  requireText(skill, `| ${slot} |`, `Missing standard slot ${slot}`);
+}
 requireText(workflow, "No provider call is allowed in this state", "Direction approval gate");
 requireText(workflow, "requires human sample approval before expansion", "Sample approval gate");
 requireText(workflow, "approver_role=admin", "Admin pack approval gate");

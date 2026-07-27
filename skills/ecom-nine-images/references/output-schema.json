@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ecommerce Image Director Result",
+  "type": "object",
+  "required": [
+    "skill_version",
+    "sku",
+    "mode",
+    "platform",
+    "market",
+    "status",
+    "current_gate",
+    "directions",
+    "reference_plan",
+    "approvals",
+    "assets",
+    "review",
+    "writeback",
+    "next_action"
+  ],
+  "properties": {
+    "skill_version": {"type": "string"},
+    "sku": {"type": "string", "minLength": 1},
+    "product_name": {"type": "string"},
+    "mode": {"enum": ["refresh", "generate", "listing_pack", "review"]},
+    "platform": {"type": "string", "minLength": 1},
+    "market": {"type": "string", "minLength": 1},
+    "slot": {"type": ["string", "integer", "null"]},
+    "status": {
+      "enum": [
+        "blocked",
+        "planned",
+        "generated_unreviewed",
+        "reviewed",
+        "approved",
+        "delivered",
+        "published",
+        "concept_only"
+      ]
+    },
+    "current_gate": {
+      "enum": [
+        "context_pending",
+        "context_ready",
+        "directions_proposed",
+        "direction_approved",
+        "sample_generated",
+        "sample_reviewed",
+        "sample_approved",
+        "full_pack_generated",
+        "full_pack_reviewed",
+        "pack_approved",
+        "delivered",
+        "written_back"
+      ]
+    },
+    "known_facts": {"type": "array", "items": {"type": "string"}},
+    "gaps": {"type": "array", "items": {"type": "string"}},
+    "directions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "slot_mission", "proof", "must_show", "avoid", "recommended"],
+        "properties": {
+          "name": {"type": "string"},
+          "slot_mission": {"type": "string"},
+          "proof": {"type": "string"},
+          "must_show": {"type": "array", "items": {"type": "string"}},
+          "avoid": {"type": "array", "items": {"type": "string"}},
+          "recommended": {"type": "boolean"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "reference_plan": {
+      "type": "object",
+      "required": ["required", "source", "router_supported"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "source": {"type": ["string", "null"]},
+        "router_supported": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "router": {
+      "type": ["object", "null"],
+      "properties": {
+        "tool": {"const": "ecom_router_image_generate"},
+        "provider": {"type": ["string", "null"]},
+        "model": {"type": ["string", "null"]},
+        "status": {"type": ["string", "null"]},
+        "request_id": {"type": ["string", "null"]},
+        "cost": {"type": ["number", "string", "null"]}
+      },
+      "required": ["tool", "status"],
+      "additionalProperties": true
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "state", "approver", "approver_role", "approved_scope", "real_call_authorized"],
+        "properties": {
+          "stage": {"enum": ["direction", "sample", "pack"]},
+          "state": {"enum": ["not_requested", "pending", "approved", "changes_requested", "rejected"]},
+          "approver": {"type": ["string", "null"]},
+          "approver_role": {"enum": ["operator", "admin", null]},
+          "approved_scope": {"type": ["string", "null"]},
+          "real_call_authorized": {"type": "boolean"},
+          "approved_at": {"type": ["string", "null"]}
+        },
+        "additionalProperties": true
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "url", "state", "approval_ref", "platform_evidence"],
+        "properties": {
+          "kind": {"enum": ["sample", "full_pack", "detail", "review"]},
+          "url": {"type": "string", "minLength": 1},
+          "state": {"enum": ["generated", "reviewed", "approved", "delivered", "published"]},
+          "approval_ref": {"type": ["string", "null"]},
+          "platform_evidence": {"type": ["string", "null"]}
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"state": {"enum": ["approved", "delivered", "published"]}}},
+            "then": {"properties": {"approval_ref": {"type": "string", "minLength": 1}}}
+          },
+          {
+            "if": {"properties": {"state": {"const": "published"}}},
+            "then": {"properties": {"platform_evidence": {"type": "string", "minLength": 1}}}
+          }
+        ],
+        "additionalProperties": true
+      }
+    },
+    "review": {
+      "type": ["object", "null"],
+      "properties": {
+        "decision": {"enum": ["pass", "warn", "fail"]},
+        "failure_codes": {"type": "array", "items": {"type": "string"}},
+        "human_approval_required": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "writeback": {
+      "type": "object",
+      "required": ["target", "completed"],
+      "properties": {
+        "target": {"type": "string"},
+        "completed": {"type": "boolean"},
+        "record_or_doc_url": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "next_action": {"type": "string"},
+    "next_owner": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"router": {"type": "object"}}, "required": ["router"]},
+      "then": {
+        "properties": {
+          "approvals": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "stage": {"const": "direction"},
+                "state": {"const": "approved"},
+                "real_call_authorized": {"const": true}
+              },
+              "required": ["stage", "state", "real_call_authorized"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"current_gate": {"enum": ["pack_approved", "delivered"]}}},
+      "then": {
+        "properties": {
+          "approvals": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "stage": {"const": "pack"},
+                "state": {"const": "approved"},
+                "approver_role": {"const": "admin"}
+              },
+              "required": ["stage", "state", "approver_role"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "anyOf": [
+          {"properties": {"status": {"const": "delivered"}}},
+          {"properties": {"status": {"const": "published"}}}
+        ]
+      },
+      "then": {
+        "properties": {
+          "approvals": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "stage": {"const": "pack"},
+                "state": {"const": "approved"},
+                "approver_role": {"const": "admin"}
+              },
+              "required": ["stage", "state", "approver_role"],
+              "additionalProperties": true
+            }
+          },
+          "assets": {
+            "contains": {
+              "anyOf": [
+                {"properties": {"state": {"const": "delivered"}}},
+                {"properties": {"state": {"const": "published"}}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "approved"}}},
+      "then": {"properties": {"current_gate": {"enum": ["sample_approved", "pack_approved", "delivered", "written_back"]}}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "delivered"}}},
+      "then": {
+        "properties": {
+          "current_gate": {"enum": ["delivered", "written_back"]}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "published"}}},
+      "then": {
+        "properties": {
+          "current_gate": {"const": "written_back"},
+          "assets": {
+            "contains": {
+              "properties": {
+                "state": {"const": "published"},
+                "platform_evidence": {"type": "string", "minLength": 1}
+              },
+              "required": ["state", "platform_evidence"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "concept_only"}}},
+      "then": {
+        "properties": {
+          "current_gate": {"enum": ["context_pending", "context_ready", "directions_proposed"]},
+          "assets": {
+            "not": {"contains": {"properties": {"state": {"enum": ["approved", "delivered", "published"]}}, "required": ["state"]}}
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": true
+}
