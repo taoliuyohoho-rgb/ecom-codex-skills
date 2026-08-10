@@ -1,6 +1,7 @@
 ---
 name: ecom-nine-images
 description: "Use for a standard ecommerce 9-image listing pack. Read the live Feishu product master by SKU, verify identity/specifications/claims/reference image, propose directions, generate one approved sample, review it, then expand to exactly nine numbered slots and write the run back. Do not use for titles, detail-page copy, videos, or product deep research."
+version: 1.0.0
 metadata:
   hermes:
     tags: [ecommerce, nine-images, listing, sku, review]
