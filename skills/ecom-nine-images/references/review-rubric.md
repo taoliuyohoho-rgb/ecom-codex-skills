@@ -6,18 +6,31 @@ Review the generated image against the real SKU reference, confirmed Feishu fact
 
 Any of these sets the decision to `fail`:
 
-- `reference_missing`: identity-sensitive output has no verified real SKU reference.
+- `reference_missing`: a formal image request has no verified real SKU reference or reference evidence.
 - `wrong_product_type`: the generated subject is a different product category or SKU.
-- `identity_drift`: silhouette, proportions, controls, packaging, brand area, handles, lid, spout, base, interfaces, or key parts changed.
-- `added_or_missing_parts`: a structural component was invented, removed, duplicated, or relocated.
-- `fake_claim_risk`: specification, function, material, certification, rating, review, price, promotion, inventory, logistics, or warranty is unverified or invented.
+- `identity_drift`: buyer-relevant product type, silhouette, proportions, controls, packaging, brand, quantity relationship, or key structural part changed.
+- `added_or_missing_parts`: a buyer-relevant structural component was invented, removed, duplicated, or relocated.
+- `buyer_fact_error`: brand, SKU, package/specification, count, quantity, price, Claim, certification, rating, promotion, inventory, logistics, or warranty is unverified, invented, or materially incorrect.
 - `physical_impossibility`: use, fluid, steam, perspective, human interaction, or product behavior is materially impossible or misleading.
+- `fabricated_testimonial`: a fictional review, rating, username, date, quotation, endorsement, or personal outcome is presented as customer evidence.
 
 Ambiguous or occluded identity evidence is at least `warn`; it is never silently `pass`.
 
+## Text Risk Classification
+
+Text is reviewed for buyer impact, not for pixel-perfect reproduction.
+
+| Text condition | Decision |
+|---|---|
+| Changes a buyer-relevant fact: brand, SKU, package/specification, count, quantity, price, Claim, certification, rating, promotion, inventory, logistics, or warranty | `fail` with `buyer_fact_error` |
+| Minor typography, spacing, line break, kerning, ornamental copy, or non-factual text imperfection | `warn`; named human accepts or requests iteration based on slot use and visual quality |
+| Clear and accurate for the intended slot | `pass` |
+
+Do not repair a `warn` with programmatic text overlays. Either accept the complete generated image for that slot or make a new reference-aware generation/edit.
+
 ## Dimensions
 
-Score each dimension `pass`, `warn`, or `fail` with one-sentence evidence.
+Score each dimension `pass`, `warn`, or `fail` with one-sentence evidence. A sample that is technically safe but visually weak is not ready for expansion: it needs `pass` on **composition/readability**, **market/platform fit**, and **technical quality**, or a named human must explicitly accept the `warn` for the approved scope.
 
 ### SKU identity
 
@@ -25,29 +38,36 @@ Score each dimension `pass`, `warn`, or `fail` with one-sentence evidence.
 - proportions and perspective geometry;
 - controls, brand/label area, packaging layout;
 - handles, lid/knob, spout, base, interfaces, accessories;
-- added/missing/duplicated parts.
+- added/missing/duplicated parts;
+- buyer-relevant package/count/variant relationship.
 
-### Claims and compliance
+### Claims and commercial facts
 
-- all visible facts trace to confirmed Feishu fields or approved strategy;
+- all visible buyer-relevant facts trace to confirmed Feishu fields or approved strategy;
 - forbidden claims absent;
-- text readable and accurate;
-- no fabricated badges, ratings, reviews, promotions, or logistics promises.
+- no fabricated badges, ratings, reviews, promotions, or logistics promises;
+- text risk classification is recorded.
 
 ### Slot mission and proof
 
-- image answers one shopper question;
+- image answers one shopper question and communicates no more than one primary approved selling point;
 - proof is visible, relevant, and verifiable;
 - proof supports rather than obscures the product;
 - required must-show items are present.
+- any metaphor is identifiable as illustrative, does not resemble anatomical or clinical evidence, and does not strengthen the approved claim;
+- slot has a distinct buyer question, persuasion role, primary subject, and visual grammar relative to completed slots; a cosmetic variation of an existing slot is `fail` for pack coverage;
+- decision-support content resolves an evidenced uncertainty instead of creating a new medical, safety, disease, or treatment concern;
+- non-factual lifestyle copy is not framed as a review, testimonial, quotation, star rating, or buyer outcome;
 
 ### Composition and readability
 
-- product is recognized first where required;
-- hierarchy product -> proof -> conclusion is clear;
-- text/information density suits the slot;
+- product is recognized first where the slot requires it;
+- hierarchy supports the slot mission;
+- information density suits the slot;
 - crop, contrast, scale, and safe areas are usable;
-- no clutter, duplicated content, or unreadable model text.
+- no clutter or duplicated content;
+- the image is not a generic repetition of another slot.
+- headline and support text remain readable on mobile and do not compete with several unrelated claims;
 
 ### Market and platform fit
 
@@ -59,14 +79,14 @@ Score each dimension `pass`, `warn`, or `fail` with one-sentence evidence.
 ### Technical quality
 
 - sufficient resolution and clean edges;
-- no malformed text, hands, geometry, reflections, shadows, or transparency;
+- no distracting malformed hands, geometry, reflections, shadows, or transparency;
 - consistent product color/material and pack visual system;
 - asset is downloadable and opens correctly.
 
 ## Decision Rules
 
 - `fail`: any hard gate fails, or the slot mission is not usable.
-- `warn`: no hard fail, but identity is unclear, proof/fit is weak, or human judgment is required.
+- `warn`: no hard fail, but identity is unclear, text has non-factual imperfections, proof/fit is weak, or human judgment is required.
 - `pass`: all hard gates pass and the image is usable for the approved slot. Human approval is still required before expansion or publication.
 
 ## Review Output
@@ -85,6 +105,7 @@ Score each dimension `pass`, `warn`, or `fail` with one-sentence evidence.
     "market_platform_fit": {"status": "pass|warn|fail", "evidence": ""},
     "technical_quality": {"status": "pass|warn|fail", "evidence": ""}
   },
+  "text_risk": "pass|warn|fail",
   "must_fix": [],
   "recommended_prompt_fixes": [],
   "human_approval_required": true

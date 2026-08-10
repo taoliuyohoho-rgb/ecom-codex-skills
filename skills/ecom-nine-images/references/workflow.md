@@ -11,7 +11,7 @@ Use this state machine for every image task. A state advances only when its comp
 | `listing_pack` | Several marketplace slots must work as one coherent set | context -> pack strategy -> sample board -> review -> full expansion -> review -> delivery |
 | `review` | Existing images need identity, claims, slot, or platform QA | context -> review -> decision -> writeback |
 
-Prefer `refresh` or deterministic compositing over `generate` when it can preserve product identity and satisfy the task.
+Formal delivery defaults to a coherent reference-aware `gpt-image-2` generation or edit with the real SKU anchor. Do not use programmatic collage, overlays, or post-generation layout composition as the normal identity-preservation path.
 
 ## State Machine
 
@@ -34,7 +34,7 @@ Failure: return `blocked`; list the missing resource, field, or owner.
 
 ### 2. `directions_proposed`
 
-Produce 2-3 materially different directions. Each direction states one slot mission, proof, composition, information density, reference plan, risk, and avoid list. Recommend one.
+Produce 2-3 materially different directions. Each direction states one slot mission, approved selling point or buyer uncertainty, proof, copy hierarchy, visual mechanism, information density, reference plan, risk, and avoid list. Recommend one. For sensitive categories, distinguish literal proof from metaphorical communication.
 
 No provider call is allowed in this state.
 
@@ -62,7 +62,9 @@ Evidence: named approver, selected sample/direction, fixes accepted, and explici
 
 ### 7. `full_pack_generated`
 
-Applies to `listing_pack` or approved multi-image work. Assign one mission to each slot and preserve the approved identity, visual system, and claims. Do not duplicate the same image with cosmetic changes and call it a pack.
+Applies to `listing_pack` or approved multi-image work. Assign one approved selling point or buyer question to each secondary slot and preserve the approved identity, visual system, copy, and claims. Before each generation, compare the slot with the completed pack using `pack-architecture.md`; do not duplicate the same image with cosmetic changes and call it a pack. A metaphor supports comprehension but is never recorded as proof.
+
+An explicit approval to continue after a slot authorizes only the next scoped generation. Retain the direction, call, review, and approval evidence for every remaining slot.
 
 ### 8. `full_pack_reviewed`
 
@@ -89,5 +91,5 @@ Treat a task as continuation only when the user or task explicitly says so. Read
 - Authentication/permission: stop and identify the exact client/OAuth issue; never request provider keys.
 - Reference unsupported: stop; do not fall back to text-only final generation.
 - Rate limit/overload: retry within bounded policy or switch provider only if the approved scope allows it; record the switch.
-- Invalid output/no image: classify as provider failure, not a reviewed sample.
+- Invalid output/no image: classify as provider failure, not a reviewed sample. Inspect and retain the raw response; retry once with the same approved mission and a shorter or more concrete prompt when the provider gives only a generic failure. Do not silently change the buyer question or relax claims boundaries.
 - Safety refusal: preserve the refusal and revisit claims/brief; do not weaken compliance boundaries silently.

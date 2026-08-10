@@ -1,4 +1,4 @@
 interface:
   display_name: "Ecommerce Nine Images"
-  short_description: "SKU-safe sample-first nine-image workflow"
-  default_prompt: "Use $ecom-nine-images to read shared product truth and propose 2-3 nine-image directions. Stop after recommending one direction. Do not call the Router until direction approval and separate real-call authorization are recorded; then generate only the approved sample, review it, and stop again for sample approval before expanding to exactly slots 1-9."
+  short_description: "SKU-safe, non-repetitive nine-image workflow"
+  default_prompt: "Use $ecom-nine-images to read shared product truth, build a nine-slot differentiation matrix, map one approved selling point or buyer uncertainty to each secondary image, and propose 2-3 text-plus-visual directions. Stop after recommending one direction. Do not call the Router until direction approval and separate real-call authorization are recorded; then generate only the approved sample, review it, and stop again for sample approval before expanding to exactly slots 1-9."

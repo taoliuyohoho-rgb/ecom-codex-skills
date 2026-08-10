@@ -2,90 +2,72 @@
 
 Prompts are execution artifacts, not product truth. Build them only from confirmed Feishu facts, the approved direction, the real SKU reference, and documented visual evidence.
 
-## Blocks
+## Default Production Contract
+
+Every formal ecommerce image uses one coherent `gpt-image-2` reference-aware generation or edit with the real SKU image attached. Do not use programmatic collage, logo/text overlays, deterministic post-generation layouts, or an unreferenced lookalike product as formal delivery.
+
+Reference transport is not prompt content. A deterministic caller attaches a stable HTTPS URL or programmatically constructed data URL plus the exact source-file SHA-256. Do not make an LLM reproduce Base64 in tool arguments.
+
+## Prompt Density
+
+Start short. Each slot Prompt must lock only:
 
 1. **Output intent**
-   - task mode, platform, market, slot, ratio, and commercial purpose.
-2. **Identity invariant**
-   - exact product/SKU identity and structures that must not change.
-3. **Benchmark mechanisms**
-   - 2-4 dated visual mechanisms; never competitor facts, brands, badges, or copied layouts.
-4. **Proof**
-   - one visible, verifiable object/result that serves the slot mission.
-5. **Market scene**
-   - plausible audience, environment, props, behavior, and physical relationships.
-6. **Slot composition**
-   - framing, subject share, camera angle, information hierarchy, and negative space.
-7. **Lighting/material**
-   - concrete rendering expectations for the product and proof.
-8. **Allowed changes**
-   - background, props, proof, light, and approved information layer only.
-9. **Hard constraints**
-   - exact structures, packaging, verified claims, and platform rules to preserve.
-10. **Avoid**
-   - identity drift, invented parts/claims, unreadable text, physical errors, visual clutter, and off-platform composition.
+   - platform, market, ratio, image slot, buyer scenario, one approved selling point or buyer uncertainty, and one shopper decision.
+2. **SKU facts**
+   - the supplied real SKU reference and buyer-relevant facts that must not change: product type, brand, structure, package/specification, count, quantity relationship, and approved Claims.
+3. **Necessary exclusions**
+   - unapproved claims, wrong SKU/variant, invented price/promotion/certification/rating, or a known prior failure.
 
-## Anchored Edit Skeleton
+Everything else is model creative space by default: scene treatment, composition, camera, lighting, props, material detail, and minor text layout. Add a concrete creative constraint only when it comes from an approved direction, a platform hard rule, or an observed reproducible failure.
+
+## Reference-Aware Whole-Image Skeleton
 
 ```text
-Edit the supplied SKU reference into a <platform/market/slot> ecommerce image.
+Create a <platform/market/ratio/slot> ecommerce image using the supplied real SKU reference.
 
-Product identity invariant:
-- keep the exact product type, shape, silhouette, structure, proportions, controls, packaging, brand area, and key details unchanged
-- do not redesign, add, remove, or relocate product parts
+Use scenario: <buyer situation and intended placement>.
+Shopper decision: <one question this image answers>.
 
-Slot mission: <one shopper decision this image supports>
-Proof: <visible and verified proof object/result>
-Market scene: <plausible audience/context/props>
-Composition: <ratio, framing, product share, information hierarchy>
-Lighting/material: <concrete treatment>
+Keep these SKU facts unchanged:
+- <product type / brand / structure / package or specification / count / approved Claim>
 
-Allowed changes:
-- <background/props/proof/light/information layer>
+Optional approved direction:
+- <only the necessary brand direction, platform requirement, or prior-failure correction>
 
-Hard constraints:
-- <verified claim and identity constraints>
-
-Avoid:
-- <identity failure>
-- <claim/compliance failure>
-- <composition/platform failure>
+Do not:
+- <wrong variant, invented claim, price, promotion, certification, rating, or known failure>
 ```
 
-## New Composition Skeleton
+## Text And Facts
 
-Use only when a real reference is still attached and the provider supports it.
+- Let `gpt-image-2` render packaging, short copy, specifications, and visual text as part of the whole image.
+- For a claim-bearing secondary image, use one short approved headline and at most one necessary support line. Bind both to the slot's fact source; do not combine unrelated selling points.
+- **Typography is part of the image direction, not a fixed overlay zone.** Lock only approved factual copy (when any); give the model freedom to make that copy behave like an ecommerce poster: vary scale, crop, line breaks, placement, hierarchy, letter treatment, material interaction, and integration with the product or visual metaphor. Do not default to a large upper-left, all-caps block unless the approved direction calls for it.
+- Use a concise typography intent such as `integrated editorial poster treatment`, `type interacting with the material`, or `quiet premium product typography`, instead of prescribing a rigid text box. Exact spelling remains mandatory for buyer-relevant facts; decorative non-factual lifestyle text may be model-composed only when it cannot be mistaken for a claim, specification, endorsement, promotion, or review.
+- Let the visual explain or emotionally clarify the text. For sensitive categories, a restrained non-anatomical metaphor may communicate hydration, softness, balance, protection, freshness, calm, or comfort, but it must not appear to be anatomical, clinical, or test evidence.
+- Never programmatically repair text with overlays after generation.
+- The source of every visible commercial fact remains Feishu or approved strategy. Model text rendering does not grant permission to introduce a new fact.
+- Wrong brand, SKU, package/specification, count, quantity relationship, price, Claim, certification, rating, or promotion is a hard failure.
+- Minor typography, spacing, line-break, or non-factual copy imperfections may be `warn`; the named reviewer decides whether the image is acceptable for its intended slot.
+- **Lifestyle/selling-text layer.** For a context or decision-support slot, the Prompt may include a brief sales-oriented text element (e.g. a 1–3 word phrase like "Daily Care", "Gentle Care", or a short lifestyle descriptor) to strengthen purchase appeal. This layer is generated by the model, not a programmatic overlay. It must never be a factual Claim, specification, rating, certification, price, or promotion. Purely decorative or mood-setting text is acceptable but remains subject to the commercial-fact review boundary.
+- **User-led lifestyle layer.** A need-state, desired-state, or ritual slot may use a complete non-factual lifestyle line when the approved direction needs more emotional pull. Classify it in the request metadata as `non_factual_lifestyle_copy`; render it without quotation marks, review/testimonial framing, stars, usernames, dates, or first-person outcomes. The line must not promise that the product causes the desired state.
+- **Decision-support relevance.** Do not prompt a defensive FAQ that creates medicine, disease, safety, or treatment anxiety. A question-and-answer requires an evidenced buyer uncertainty plus a verified, source-bound answer. Otherwise choose a user-led lifestyle or ritual mechanism instead.
+- A visual metaphor is not a claim source. Do not use it to imply treatment, guaranteed outcomes, anatomical change, pathogen elimination, internal action, or a measured result.
+- Do not prompt for fictional customer reviews, star ratings, usernames, dates, quotation marks, testimonials, or personal outcomes. For an evidence gap, use a labeled `Common question` or `Before you buy` card with a verified answer instead.
 
-```text
-Generate a <ratio> ecommerce composition for <platform/market/slot> using the supplied SKU reference as the immutable product identity.
+## When To Add Constraints
 
-<identity invariant>
-<slot mission and proof>
-<market scene>
-<composition>
-<lighting/material>
-<allowed changes>
-<hard constraints>
-<avoid>
-```
+| Trigger | Add only this kind of control |
+|---|---|
+| Approved brand direction | The named visual principle, not a complete art-director shot list |
+| Platform hard rule | Ratio, background, safe area, file/format, or required product visibility |
+| Product fails to read | Product is the first visual priority for this slot |
+| Repeated material/geometry failure | The exact visible material or structure to correct |
+| Repetitive pack | A different buyer situation, proof, moment, or slot mission |
+| Human says “same as the previous one” | Replace the buyer question and persuasion role; do not only change styling |
 
-## Text And Marketing Layers
-
-- Default to zero or 1-2 short fact labels, each no more than 3-4 words.
-- Prefer reserved information space and deterministic post-generation overlays for titles, tables, prices, ratings, certifications, and logistics promises.
-- Use only approved modules. Never invent `Hot Sale`, free shipping, COD, rating, reviews, ready stock, certification, warranty, or promotion.
-- One image communicates one conclusion. The reading order is product -> proof -> conclusion.
-
-## Hero Defaults
-
-For a marketplace hero unless a current benchmark or platform rule overrides it:
-
-- product is recognized first;
-- product occupies roughly 70-85% of the frame;
-- background supports rather than competes;
-- information is sparse but not empty;
-- proof does not become the main subject;
-- avoid editorial posters, magazine covers, decorative cards, and atmosphere-first layouts.
+Do not turn broad taste words such as "premium", "minimal", or "high quality" into a long fixed list of camera, light, color, prop, and spacing values.
 
 ## Benchmark Record
 
