@@ -2,7 +2,7 @@
 name: ecom-product-video
 description: "Compatibility source for ecommerce product-video production. Use the canonical Codex ecom-product-video scenario Skill with video-production-core; supports story-led director-brief exploration and production-master handoff while this copy remains a compatibility source."
 metadata:
-  version: 2.2.0
+  version: 2.3.0
 ---
 
 # Ecommerce Product Video Compatibility Source
@@ -18,4 +18,4 @@ The current story-led execution split is:
 
 Exploration does not waive script confirmation, paid-call authorization, product/claim review, provenance, or final approval. AI-generated product interaction remains illustrative rather than real proof.
 
-Do not extend this copy with provider rules, project facts, or a second production workflow. Keep it as a compatibility source until consumers are mapped and the canonical no-spend scenario regression passes.
+For execution, the shared MCP Router is the only provider entrypoint. Its ecommerce video default is Seedance 2.0 (`doubao-seedance-2-0-260128`); `seedance-2.0` and `seedance-2.0-fast` are supported caller aliases. Do not extend this copy with credentials, project facts, or a second production workflow. Keep it as a compatibility source until consumers are mapped and the canonical no-spend scenario regression passes.
