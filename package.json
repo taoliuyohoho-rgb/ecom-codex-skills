@@ -15,7 +15,7 @@
     "test": "npm run build && npm run validate-skills && npm run test-skill-contracts && npm run test-image-skill && npm run test-install"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.5",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "express": "^5.1.0",
     "zod": "^3.25.76"
   },
