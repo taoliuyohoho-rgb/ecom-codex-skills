@@ -4,6 +4,26 @@ import { join } from "node:path";
 export type AiCapability = "text" | "image" | "video";
 export type AiProvider = "gemini" | "doubao" | "deepseek" | "openai" | "qwen";
 
+export const SEEDANCE_2_MODEL = "doubao-seedance-2-0-260128";
+export const SEEDANCE_2_FAST_MODEL = "doubao-seedance-2-0-fast-260128";
+
+const VIDEO_MODEL_ALIASES: Record<string, string> = {
+  "seedance-2.0": SEEDANCE_2_MODEL,
+  "seedance-2-0": SEEDANCE_2_MODEL,
+  "seedance-2.0-fast": SEEDANCE_2_FAST_MODEL,
+  "seedance-2-0-fast": SEEDANCE_2_FAST_MODEL,
+  "doubao-seedance-2.0": SEEDANCE_2_MODEL,
+  "doubao-seedance-2-0": SEEDANCE_2_MODEL,
+  "doubao-seedance-2.0-fast": SEEDANCE_2_FAST_MODEL,
+  "doubao-seedance-2-0-fast": SEEDANCE_2_FAST_MODEL,
+};
+
+export function normalizeVideoModel(model?: string): string | undefined {
+  if (!model) return undefined;
+  const trimmed = model.trim();
+  return VIDEO_MODEL_ALIASES[trimmed.toLowerCase()] || trimmed;
+}
+
 export type TextGenerateRequest = {
   prompt: string;
   system?: string;
@@ -145,6 +165,7 @@ function providerProfile(provider: AiProvider, capability: AiCapability, model?:
         ? env("ARK_VIDEO_BASE_URL", "SEEDANCE_BASE_URL", "DOUBAO_BASE_URL", "DOUBAO_ENDPOINT") ||
           "https://ark.cn-beijing.volces.com/api/v3"
         : env("DOUBAO_BASE_URL", "DOUBAO_ENDPOINT") || "https://ark.cn-beijing.volces.com/api/v3";
+    const normalizedModel = capability === "video" ? normalizeVideoModel(model) : model;
     return {
       provider,
       capability,
@@ -154,12 +175,12 @@ function providerProfile(provider: AiProvider, capability: AiCapability, model?:
           : env("DOUBAO_API_KEY", "ARK_API_KEY"),
       baseUrl,
       model:
-        model ||
+        normalizedModel ||
         (capability === "image"
           ? env("DOUBAO_IMAGE_MODEL", "SEEDREAM_MODEL") || "doubao-seedream-4-5-251128"
           : capability === "video"
-            ? env("DOUBAO_VIDEO_MODEL", "SEEDANCE_MODEL", "VIDEO_MODEL_NAME") ||
-              "doubao-seedance-1-0-lite-t2v-250428"
+            ? normalizeVideoModel(env("SEEDANCE_VIDEO_MODEL", "DOUBAO_VIDEO_MODEL", "SEEDANCE_MODEL", "VIDEO_MODEL_NAME")) ||
+              SEEDANCE_2_MODEL
             : env("DOUBAO_TEXT_MODEL", "DOUBAO_MODEL") || "doubao-seed-2-0-mini-260215"),
     };
   }

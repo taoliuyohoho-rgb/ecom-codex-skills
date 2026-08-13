@@ -10,6 +10,7 @@
     "validate-skills": "node scripts/validate-skills.mjs",
     "test-install": "node scripts/test-install.mjs",
     "test-image-skill": "node scripts/test-image-skill.mjs",
+    "test-router-video-dry-run": "node scripts/test-router-video-dry-run.mjs",
     "test-skill-contracts": "node scripts/test-skill-contracts.mjs",
     "test": "npm run build && npm run validate-skills && npm run test-skill-contracts && npm run test-image-skill && npm run test-install"
   },

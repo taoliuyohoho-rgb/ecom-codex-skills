@@ -15,6 +15,14 @@ The team endpoint is `https://ai-router.metooloo.com/mcp`. Use the MCP client's 
 - Ecommerce image generation/editing: `ecom_router_image_generate`
 - Video jobs: `ecom_router_video_start`, then `ecom_router_video_poll`
 
+### Ecommerce video default
+
+For story-led ecommerce video, use the Router's Doubao/Seedance route. The default model is `doubao-seedance-2-0-260128`; the bounded fast-draft alias is `seedance-2.0-fast` (`doubao-seedance-2-0-fast-260128`). The Router also accepts `seedance-2.0` as an alias for the standard model, so callers do not need to hard-code a provider-specific model ID.
+
+The canonical override is `SEEDANCE_VIDEO_MODEL`; older `DOUBAO_VIDEO_MODEL`, `SEEDANCE_MODEL`, and `VIDEO_MODEL_NAME` settings remain compatibility fallbacks. If an old override still points to Seedance 1.x, change it before running a 2.0 job.
+
+Always run the Skill's `no_spend_dry_run` before a real job. Pass one clean SKU identity reference image for actual generation unless the approved execution plan explicitly assigns roles to additional references for storyboard/planning.
+
 ## Rules
 
 - Provider keys, App Secrets, and access tokens are never requested from operators and never written to Feishu, Git, prompts, or logs.

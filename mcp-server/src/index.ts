@@ -3,7 +3,7 @@ import express, { type Request, type Response } from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
-import aiRuntime, { type AiProvider } from "./ai-router.js";
+import aiRuntime, { SEEDANCE_2_FAST_MODEL, SEEDANCE_2_MODEL, type AiProvider } from "./ai-router.js";
 
 const app = express();
 const port = Number(process.env.PORT || 8790);
@@ -172,6 +172,12 @@ app.get("/health", (_request, response) => {
     realCallsEnabled: aiRuntime.env.realCallsEnabled(),
     oauthEnabled,
     providers: configuredProviders(),
+    videoDefaults: {
+      provider: "doubao",
+      model: SEEDANCE_2_MODEL,
+      fastModel: SEEDANCE_2_FAST_MODEL,
+      aliases: ["seedance-2.0", "seedance-2.0-fast"],
+    },
   });
 });
 
@@ -394,7 +400,7 @@ function createServer(): McpServer {
     "ecom_router_video_start",
     {
       title: "Ecommerce Router Video Start",
-      description: "Start a video generation job through the team AI Router and return a job id.",
+      description: "Start a video generation job through the team AI Router. Ecommerce video defaults to Seedance 2.0; use model seedance-2.0-fast for a faster draft. Provider keys stay on the server.",
       inputSchema: {
         prompt: z.string().min(1).max(100_000),
         provider: providerSchema.optional(),
