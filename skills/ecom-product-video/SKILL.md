@@ -1,27 +1,21 @@
 ---
 name: ecom-product-video
-description: "Use only for ecommerce product-video production. Read live SKU truth and available proof, choose localization/hybrid/AI mode, confirm one script, plan shots, obtain real-call approval, generate/render, review, and write the versioned video run back."
-version: 1.0.0
+description: "Compatibility source for ecommerce product-video production. Use the canonical Codex ecom-product-video scenario Skill with video-production-core; supports story-led director-brief exploration and production-master handoff while this copy remains a compatibility source."
+metadata:
+  version: 2.2.0
 ---
 
-# Ecommerce Product Video
+# Ecommerce Product Video Compatibility Source
 
-This is the operator-facing product-video entry. Use `video-director-core` as the shared process reference and `global-ai-router` for approved AI calls.
+The canonical operator-facing scenario is `/Users/liutao/.codex/skills/ecom-product-video`. It composes `video-production-core`, uses four human gates (`direction`, `script`, `sample`, `final_video`), requires a no-spend dry run before external execution, and retains the project adapter for live SKU facts and writeback.
 
-## Workflow
+The supported execution modes remain `localization`, `hybrid`, and `ai_full`. Stop for explicit script approval, and require explicit approval before any external or paid generation. Generated is not approved or published.
 
-1. Load `ecom-business-context` and `ecom-run-contract`.
-2. Frame platform, market, audience, duration, objective, proof, CTA, real footage and budget.
-3. Choose `localization`, `hybrid`, or `ai_full`; prefer real proof and the lowest-cost path that satisfies the task.
-4. Propose 2-3 angles and recommend one.
-5. Draft exactly one recommended script with audio/voice/BGM plan. Stop for explicit script approval.
-6. Create shot contracts with source type, duration, product identity/proof and text/audio requirements.
-7. Obtain explicit approval before any external or paid generation. Use Router video tools only within scope.
-8. Materialize and review the output for SKU identity, claims, platform fit, technical media quality and script/shot coverage.
-9. Bind approval to the exact run/version, store the asset, and write state/evidence back.
+The current story-led execution split is:
 
-AI footage may illustrate but may not impersonate missing product proof. Generated is not approved or published.
+- `director_brief_exploration`: lock the single SKU reference role, `hook -> concrete story -> product moment -> CTA`, market context, required product action, and confirmed offer facts; let the model choose framing, camera, acting, pacing, transitions, and promotion treatment for one bounded sample.
+- `production_master`: convert accepted story language into reviewed beats, verified text/CTA, continuity requirements, and deterministic final assembly where exact copy or timing matters.
 
-## Output
+Exploration does not waive script confirmation, paid-call authorization, product/claim review, provenance, or final approval. AI-generated product interaction remains illustrative rather than real proof.
 
-Return task/run identity, SKU context, selected mode/angle, script version/approval, shot plan, provider/model/job status, asset/version, review, approval, delivery/publication state and next owner/action.
+Do not extend this copy with provider rules, project facts, or a second production workflow. Keep it as a compatibility source until consumers are mapped and the canonical no-spend scenario regression passes.
