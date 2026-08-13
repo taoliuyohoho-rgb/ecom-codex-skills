@@ -98,6 +98,12 @@ Acceptable confirmation must explicitly lock the script/prompt or specific chang
 
 Before any Seedance, Sora, Veo, JiMeng, dubbing, music, remix, or other external / paid provider step, stop again unless the same user message already explicitly approved that provider step. The approval request must name the provider or script, state that prompts/assets may be sent outside the local workspace, and identify the concrete run folder or artifact.
 
+## Prompt Granularity
+
+When narrative interpretation is the experiment, a scenario adapter may submit one bounded director brief instead of a fully prescribed shot list. The brief must still lock the story beats, reference roles, required action, audio/text essentials, evidence mode, cost scope, and review bar. Let the provider choose internal framing, camera, acting, transitions, and pacing. Convert accepted exploration language into explicit beat/shot contracts before production whenever proof, continuity, copy, timing, or deterministic assembly requires it.
+
+A complete short story may be an exploration sample; it is not automatically a release master. Exploration changes prompt granularity, not script confirmation, spend authorization, provenance, review, or final approval.
+
 ## Default Workflow
 
 The default video production order is:
