@@ -36,7 +36,8 @@ requireText(interfaceText, "Stop after recommending one direction", "Default int
 requireText(interfaceText, "separate real-call authorization", "Default interface real-call gate");
 requireText(rubric, "reference_missing", "Reference failure code");
 requireText(rubric, "identity_drift", "Identity failure code");
-requireText(rubric, "fake_claim_risk", "Claim failure code");
+requireText(rubric, "buyer_fact_error", "Buyer-fact failure code");
+requireText(rubric, "fabricated_testimonial", "Testimonial failure code");
 
 const statuses = new Set(schema.properties?.status?.enum || []);
 for (const status of ["blocked", "generated_unreviewed", "approved", "delivered", "published", "concept_only"]) {
