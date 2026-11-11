@@ -13,7 +13,7 @@ Reference transport is not prompt content. A deterministic caller attaches a sta
 Start short. Each slot Prompt must lock only:
 
 1. **Output intent**
-   - platform, market, ratio, image slot, buyer scenario, one approved selling point or buyer uncertainty, and one shopper decision.
+   - platform, market, ratio (from the SKILL.md platform ratio table), image slot, buyer scenario, one approved selling point or buyer uncertainty, and one shopper decision.
 2. **SKU facts**
    - the supplied real SKU reference and buyer-relevant facts that must not change: product type, brand, structure, package/specification, count, quantity relationship, and approved Claims.
 3. **Necessary exclusions**

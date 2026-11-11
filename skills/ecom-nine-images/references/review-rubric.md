@@ -71,7 +71,7 @@ Score each dimension `pass`, `warn`, or `fail` with one-sentence evidence. A sam
 
 ### Market and platform fit
 
-- ratio and slot behavior match platform needs;
+- ratio matches the target platform (TikTok Shop 4:5, Shopee 3:4, Amazon/square grid 1:1) and slot behavior matches platform needs;
 - scene and props are plausible for market/audience;
 - visual mechanisms trace to a dated benchmark or approved store style;
 - output is commerce-first rather than an unrelated editorial image.

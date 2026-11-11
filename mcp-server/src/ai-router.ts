@@ -54,6 +54,7 @@ export type VideoGenerateRequest = {
   seconds?: number;
   size?: string;
   referenceImages?: Array<{ dataUrl?: string; url?: string; mimeType?: string }>;
+  referenceVideos?: Array<{ dataUrl?: string; url?: string; materialId?: string; mimeType?: string }>;
   generateAudio?: boolean;
 };
 
@@ -492,11 +493,28 @@ async function generateImage(req: ImageGenerateRequest): Promise<any> {
 
 async function generateVideo(req: VideoGenerateRequest): Promise<any> {
   return withProviderFallback("video", req.provider, req.model, async (profile) => {
+    if (req.referenceVideos?.length && profile.provider !== "doubao") {
+      throw new Error("referenceVideos is currently supported only by the Doubao Seedance video route");
+    }
+
     if (profile.provider === "doubao") {
       const content: any[] = [{ type: "text", text: req.prompt }];
       for (const image of req.referenceImages || []) {
         const value = image.url || image.dataUrl;
-        if (value) content.push({ type: "image_url", image_url: { url: value } });
+        if (value) content.push({ type: "image_url", role: "reference_image", image_url: { url: value } });
+      }
+      for (const video of req.referenceVideos || []) {
+        if (video.materialId) {
+          content.push({
+            type: "video_url",
+            role: "reference_video",
+            video_url: { material_id: video.materialId },
+          });
+          continue;
+        }
+
+        const value = video.url || video.dataUrl;
+        if (value) content.push({ type: "video_url", role: "reference_video", video_url: { url: value } });
       }
       const data = await requestJson(`${trimSlash(profile.baseUrl)}/contents/generations/tasks`, {
         method: "POST",

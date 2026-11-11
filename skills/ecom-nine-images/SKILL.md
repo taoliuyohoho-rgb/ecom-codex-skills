@@ -1,7 +1,7 @@
 ---
 name: ecom-nine-images
-description: "Use for a standard ecommerce 9-image listing pack. Read the live Feishu product master by SKU, verify identity/specifications/claims/reference image, propose directions, generate one approved sample, review it, then expand to exactly nine numbered slots and write the run back. Do not use for titles, detail-page copy, videos, or product deep research."
-version: 1.0.0
+description: "Use for a standard ecommerce 9-image listing pack (电商9图, 商品九图, listing main and secondary images). Read the live Feishu product master by SKU, verify identity/specifications/claims/reference image, propose directions, generate one approved sample, review it, then expand to exactly nine numbered slots and write the run back. Do not use for titles, detail-page copy, paid static ads, videos, or product deep research."
+version: 1.2.0
 metadata:
   hermes:
     tags: [ecommerce, nine-images, listing, sku, review]
@@ -12,7 +12,20 @@ metadata:
 
 This is the single production entry point for a standard ecommerce 9-image listing pack. It owns the image pack workflow only. It does not own product research, titles, detail-page copy, video, publishing automation, or personal product memory.
 
-Read `references/pack-architecture.md` before assigning or revising slot missions. It defines the cross-slot differentiation matrix and the sensitive-category distinction between need-state, desired-state, and personal ritual images.
+Read the references as the workflow reaches them:
+
+- `references/workflow.md` for the benchmark, state machine, run isolation and stop conditions;
+- `references/pack-architecture.md` before assigning or revising slot missions; it defines the cross-slot differentiation matrix and the sensitive-category distinction between need-state, desired-state, and personal ritual images;
+- `references/selling-point-visual-contract.md` before mapping approved selling points into slots;
+- `references/prompt-contract.md` before preparing any image request;
+- `references/review-rubric.md` before accepting a sample or slot;
+- `references/writeback.md` before updating task/run records;
+- `references/output-schema.json` when returning or storing structured state;
+- `references/electromagnetic-furnace-direction-2026-07-27.md` only as historical direction evidence for that exact product family, never as current truth.
+
+## Paid ad boundary
+
+This Skill owns marketplace listing images, not paid static ads. Do not use an ad hook or concept matrix to redefine the nine-slot buyer-question contract. If the user explicitly asks for paid static creative, hand the verified SKU facts and approved claims to the ad-creative workflow and keep the normal approval and provenance gates. Listing images and ad assets remain separate deliverables and versions.
 
 ## Required shared context
 
@@ -60,23 +73,40 @@ Reject a defensive FAQ that introduces medicine, disease, safety, or treatment a
 
 The pack always has exactly nine numbered slots. Platform adapters may change ratio, canvas, language and copy density, but must not change slot numbers or silently add/remove slots.
 
+Do not interpret "nine images" as nine hero or promotional variants. Each slot answers a different buyer question, following the benchmark's information architecture rather than its artwork or copy.
+
 Reference is required for every formal slot; the real SKU image is attached to every `gpt-image-2` request. The visual task, not a fixed production template, determines how visibly the product appears. Do not prescribe the same composition, product share, lighting, or prop system across all slots: that creates repetitive and generic packs.
 
 | Slot | Mission | Default execution | Prompt boundary |
 | --- | --- | --- | --- |
-| 1 | Product identity / hero: make the exact SKU immediately recognizable | `gpt-image-2` reference-aware generate/edit | Product is first visual priority; preserve SKU facts |
-| 2 | Primary use case: show the product in its normal customer context | `gpt-image-2` reference-aware generate/edit | State the buyer situation and approved use boundary |
-| 3 | Core benefit: prove one approved benefit with visible evidence | `gpt-image-2` reference-aware generate/edit | Show only evidence consistent with approved claim |
-| 4 | Key specification: show only verified size, capacity, material or structure | `gpt-image-2` reference-aware generate/edit | Generated text/visuals must not change the verified fact |
-| 5 | How to use: show the simplest safe usage sequence | `gpt-image-2` reference-aware generate/edit | Do not invent anatomy, dosage, unsafe use, or unsupported outcome |
-| 6 | Product details: close-up of controls, texture, interface or construction | `gpt-image-2` reference-aware generate/edit | Preserve product structure and visible details |
-| 7 | Package contents / variants: show only verified contents and variants | `gpt-image-2` reference-aware generate/edit | Do not invent or omit a buyer-relevant quantity or variant |
-| 8 | Audience / scenario: connect the SKU to one approved buyer situation | `gpt-image-2` reference-aware generate/edit | Keep product facts stable; let scene treatment vary |
-| 9 | Trust / decision support: care, compatibility, boundary, or approved CTA | `gpt-image-2` reference-aware generate/edit | Never invent rating, certificate, endorsement, promotion, or claim |
+| 1 | Product identity / hero: is this the exact SKU? Comply with the platform's MAIN-image rules | `gpt-image-2` reference-aware generate/edit | Product is first visual priority; preserve SKU facts; follow the platform's hero rules |
+| 2 | Product definition / primary positioning: what is the product? | `gpt-image-2` reference-aware generate/edit | Use only the approved product name, positioning and use boundary |
+| 3 | Quantity / unit or variant relationship: what exactly is included per purchase? | `gpt-image-2` reference-aware generate/edit | Show only the verified quantity and relationship |
+| 4 | Verified fact, specification, ingredient or core benefit: which fact matters? | `gpt-image-2` reference-aware generate/edit | Show only evidence consistent with the approved claim; generated text/visuals must not change the verified fact |
+| 5 | How or where it is used | `gpt-image-2` reference-aware generate/edit | Once exact directions are verified from official/package text, give those steps plus the real SKU reference and let the model create one coherent How-to-Use image; step-by-step source photos are not required. If directions are unverified, keep the slot as context and do not invent instructions, anatomy, dosage or outcomes |
+| 6 | Product detail: texture, interface, controls, structure or packaging detail | `gpt-image-2` reference-aware generate/edit | Preserve product structure and visible details |
+| 7 | Package contents / included components / variants | `gpt-image-2` reference-aware generate/edit | Do not invent or omit a buyer-relevant quantity or variant |
+| 8 | Audience / scenario: which approved buyer situation does it fit? | `gpt-image-2` reference-aware generate/edit | Keep product facts stable; let scene treatment vary |
+| 9 | Trust / decision support: warnings, compatibility, care, brand context or approved CTA | `gpt-image-2` reference-aware generate/edit | Never invent rating, certificate, endorsement, promotion, or claim |
 
 For every slot, begin with a concise Prompt that locks only platform/ratio, buyer scenario, slot mission, the real SKU reference and product-fact invariants. Leave composition, camera, lighting, props, material treatment and minor text layout open unless an approved direction, platform hard rule, or a prior reproducible failure requires a specific constraint.
 
+All shopper-facing text rendered into images must use the target marketplace language. Authentic non-target-language text printed on the real package may remain visible, but it cannot be the only carrier of a key purchasing fact. Review any generated text or packaging rewrite for exact language, factual correctness and claim safety.
+
 A visible product is always identity-sensitive. A product-free scene may support a buyer situation, but it cannot prove SKU identity, specification, contents, compatibility, performance or a Claim.
+
+### Platform aspect ratios
+
+The image ratio follows the target platform. Do not default to one ratio for every platform:
+
+| Platform | Ratio (width:height) | Typical resolution |
+| --- | --- | --- |
+| TikTok Shop | 4:5 | 800×1000 / 1200×1500 |
+| Shopee | 3:4 | 750×1000 / 900×1200 |
+| Amazon / traditional square grid | 1:1 | 1000×1000 / 2000×2000 |
+| Lazada | 1:1 (default), 3:4 (optional) | 800×800 / 750×1000 |
+
+When one SKU runs on several platforms, produce platform-specific versions rather than one compromise ratio, and pass the correct `ratio` in every Router request. If the platform is unknown, default to 4:5 (TikTok Shop is the primary channel) and state that assumption in the direction.
 
 ## State machine
 
@@ -98,6 +128,7 @@ A visible product is always identity-sensitive. A product-free scene may support
 - For every call, pass the real SKU image through the Router's exact `referenceImage` input with its source-file `sha256`; prefer a stable short HTTPS URL over model-authored inline Base64. The Router must fetch/decode the reference and return matching hash, byte size, dimensions and MIME evidence before a provider result can be accepted. A schema field alone is not evidence of reference use.
 - Every real request includes `task_id`, `run_id`, `skill_name`, `skill_version`, `sku`, `slot`, platform, market, approved direction and reference image source.
 - Generate one minimum sample first. **Never generate the full nine-image pack before sample approval.** A pack may expand only after the sample passes SKU/product-fact review, visual-quality review, and human approval. Do not use one slot's sample to approve a materially different buyer situation without explicit approval.
+- Treat the real SKU reference as a geometry and component invariant, not merely a brand/packaging hint: preserve the exact silhouette, relative dimensions, tube/reservoir-to-nozzle proportions, nozzle/cap shape, attachment points, count of visible components, orientation and physical relationships. Do not stretch, simplify, merge, split, substitute or invent any product part; if the source does not clearly establish a component, do not add it.
 - Preserve product type, silhouette, proportions, packaging, controls, logo area and buyer-relevant SKU details whenever the product is visible. Text-only generation is not identity-safe. A route that silently drops `referenceImage` is text-only generation and must return `blocked`, not a SKU-safe sample.
 - Let the image model render packaging, short copy, specifications and other necessary visual information in the coherent whole image. Never ask it to invent unapproved specification, function, material, certification, rating, review, price, promotion, inventory, logistics, warranty or Claim. Do not repair its text with programmatic overlays.
 - Review text by commercial risk. Wrong brand, SKU, package/specification, count, quantity relationship, price, Claim, certification or promotion is `fail`. Minor typography, spacing, line-break or non-factual copy imperfections may be `warn` and require the named human to accept or request iteration for the intended slot.

@@ -1,4 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import express, { type Request, type Response } from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -20,13 +22,6 @@ if (!configuredAuthToken && !oauthEnabled) {
 }
 
 const authToken = configuredAuthToken;
-type Session = {
-  server: McpServer;
-  transport: StreamableHTTPServerTransport;
-  lastUsedAt: number;
-};
-const sessions = new Map<string, Session>();
-const sessionTtlMs = Number(process.env.MCP_SESSION_TTL_MS || 30 * 60 * 1000);
 type OAuthState = {
   clientId: string;
   redirectUri: string;
@@ -40,12 +35,23 @@ type OAuthClient = {
   clientName?: string;
   expiresAt: number;
 };
+type RefreshTokenRecord = {
+  tokenHash: string;
+  userOpenId: string;
+  clientId: string;
+  expiresAt: number;
+};
 const oauthStates = new Map<string, OAuthState>();
 const oauthCodes = new Map<string, OAuthCode>();
 const accessTokens = new Map<string, { userOpenId: string; expiresAt: number }>();
 const oauthClients = new Map<string, OAuthClient>();
+const refreshTokens = new Map<string, RefreshTokenRecord>();
 const oauthTtlMs = 10 * 60 * 1000;
 const oauthClientTtlMs = 24 * 60 * 60 * 1000;
+const accessTokenTtlMs = Number(process.env.OAUTH_ACCESS_TOKEN_TTL_SECONDS || 3_600) * 1_000;
+const refreshTokenTtlMs = Number(process.env.OAUTH_REFRESH_TOKEN_TTL_MS || 30 * 24 * 60 * 60 * 1_000);
+const refreshTokenStorePath = process.env.OAUTH_REFRESH_TOKEN_STORE_PATH?.trim()
+  || "/opt/ecom-ai-router/oauth-refresh-tokens.json";
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: maxBodyBytes }));
@@ -79,6 +85,81 @@ function base64Url(value: Buffer): string {
 
 function randomToken(prefix: string): string {
   return `${prefix}${base64Url(randomBytes(32))}`;
+}
+
+function tokenHash(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+function isRefreshTokenRecord(value: unknown): value is RefreshTokenRecord {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return typeof record.tokenHash === "string"
+    && /^[a-f0-9]{64}$/.test(record.tokenHash)
+    && typeof record.userOpenId === "string"
+    && typeof record.clientId === "string"
+    && typeof record.expiresAt === "number";
+}
+
+async function loadRefreshTokens(): Promise<void> {
+  try {
+    const parsed = JSON.parse(await readFile(refreshTokenStorePath, "utf8")) as unknown;
+    const records = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === "object" && "tokens" in parsed
+        ? Object.entries((parsed as { tokens?: unknown }).tokens || {}).map(([tokenHash, record]) => ({
+          tokenHash,
+          ...(record && typeof record === "object" ? record : {}),
+        }))
+        : null;
+    if (!records) throw new Error("refresh token store has an unsupported format");
+    const now = Date.now();
+    for (const record of records) {
+      if (isRefreshTokenRecord(record) && record.expiresAt > now) refreshTokens.set(record.tokenHash, record);
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
+    throw error;
+  }
+}
+
+async function persistRefreshTokens(): Promise<void> {
+  const now = Date.now();
+  for (const [hash, record] of refreshTokens) {
+    if (record.expiresAt <= now) refreshTokens.delete(hash);
+  }
+  await mkdir(dirname(refreshTokenStorePath), { recursive: true });
+  const temporaryPath = `${refreshTokenStorePath}.${process.pid}.tmp`;
+  await writeFile(temporaryPath, JSON.stringify({
+    version: 1,
+    tokens: Object.fromEntries([...refreshTokens.values()].map((record) => [record.tokenHash, {
+      userOpenId: record.userOpenId,
+      clientId: record.clientId,
+      expiresAt: record.expiresAt,
+    }])),
+  }), { mode: 0o600 });
+  await rename(temporaryPath, refreshTokenStorePath);
+}
+
+async function issueTokenPair(userOpenId: string, clientId: string, previousRefreshTokenHash?: string) {
+  const accessToken = randomToken("at_");
+  const refreshToken = randomToken("rt_");
+  const refreshRecord: RefreshTokenRecord = {
+    tokenHash: tokenHash(refreshToken),
+    userOpenId,
+    clientId,
+    expiresAt: Date.now() + refreshTokenTtlMs,
+  };
+  if (previousRefreshTokenHash) refreshTokens.delete(previousRefreshTokenHash);
+  refreshTokens.set(refreshRecord.tokenHash, refreshRecord);
+  await persistRefreshTokens();
+  accessTokens.set(accessToken, { userOpenId, expiresAt: Date.now() + accessTokenTtlMs });
+  return {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    token_type: "Bearer",
+    expires_in: Math.floor(accessTokenTtlMs / 1_000),
+  };
 }
 
 function verifyPkce(verifier: string | undefined, challenge: string | undefined): boolean {
@@ -147,7 +228,7 @@ function oauthMetadata() {
     token_endpoint: `${publicBaseUrl}/oauth/token`,
     registration_endpoint: `${publicBaseUrl}/register`,
     response_types_supported: ["code"],
-    grant_types_supported: ["authorization_code"],
+    grant_types_supported: ["authorization_code", "refresh_token"],
     code_challenge_methods_supported: ["S256"],
     token_endpoint_auth_methods_supported: ["none"],
   };
@@ -217,7 +298,7 @@ app.post("/register", (request, response) => {
     client_id: clientId,
     client_id_issued_at: Math.floor(Date.now() / 1_000),
     token_endpoint_auth_method: "none",
-    grant_types: ["authorization_code"],
+    grant_types: ["authorization_code", "refresh_token"],
     response_types: ["code"],
     redirect_uris: redirectUris,
     ...(clientName ? { client_name: clientName } : {}),
@@ -298,8 +379,29 @@ app.post("/oauth/token", async (request, response) => {
     return;
   }
   const body = request.body as Record<string, unknown>;
-  const code = typeof body.code === "string" ? body.code : "";
+  const grantType = typeof body.grant_type === "string" ? body.grant_type : "authorization_code";
   const clientId = typeof body.client_id === "string" ? body.client_id : "";
+  if (grantType === "refresh_token") {
+    const suppliedRefreshToken = typeof body.refresh_token === "string" ? body.refresh_token : "";
+    const suppliedRefreshTokenHash = tokenHash(suppliedRefreshToken);
+    const record = refreshTokens.get(suppliedRefreshTokenHash);
+    if (!record || record.expiresAt <= Date.now() || record.clientId !== clientId) {
+      response.status(400).json({ error: "invalid_grant" });
+      return;
+    }
+    try {
+      response.json(await issueTokenPair(record.userOpenId, record.clientId, suppliedRefreshTokenHash));
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error));
+      response.status(500).json({ error: "token_persistence_failed" });
+    }
+    return;
+  }
+  if (grantType !== "authorization_code") {
+    response.status(400).json({ error: "unsupported_grant_type" });
+    return;
+  }
+  const code = typeof body.code === "string" ? body.code : "";
   const redirectUri = typeof body.redirect_uri === "string" ? body.redirect_uri : "";
   const verifier = typeof body.code_verifier === "string" ? body.code_verifier : undefined;
   const pending = oauthCodes.get(code);
@@ -308,9 +410,12 @@ app.post("/oauth/token", async (request, response) => {
     response.status(400).json({ error: "invalid_grant" });
     return;
   }
-  const accessToken = randomToken("at_");
-  accessTokens.set(accessToken, { userOpenId: pending.userOpenId, expiresAt: Date.now() + 60 * 60 * 1000 });
-  response.json({ access_token: accessToken, token_type: "Bearer", expires_in: 3600 });
+  try {
+    response.json(await issueTokenPair(pending.userOpenId, pending.clientId));
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    response.status(500).json({ error: "token_persistence_failed" });
+  }
 });
 
 const providerSchema = z.enum(["gemini", "doubao", "deepseek", "openai", "qwen"]);
@@ -319,6 +424,13 @@ const imageInputSchema = z.object({
   url: z.string().url().max(2_000).optional(),
   mimeType: z.string().max(100).optional(),
 }).refine((value) => Boolean(value.dataUrl || value.url), "dataUrl or url is required");
+
+const videoInputSchema = z.object({
+  dataUrl: z.string().max(10_000_000).optional(),
+  url: z.string().url().max(8_000).optional(),
+  materialId: z.string().max(1_000).optional(),
+  mimeType: z.enum(["video/mp4", "video/quicktime"]).optional(),
+}).refine((value) => Boolean(value.dataUrl || value.url || value.materialId), "dataUrl, url, or materialId is required");
 
 function createServer(): McpServer {
   const server = new McpServer({
@@ -400,7 +512,7 @@ function createServer(): McpServer {
     "ecom_router_video_start",
     {
       title: "Ecommerce Router Video Start",
-      description: "Start a video generation job through the team AI Router. Ecommerce video defaults to Seedance 2.0; use model seedance-2.0-fast for a faster draft. Provider keys stay on the server.",
+      description: "Start a video generation job through the team AI Router. Ecommerce video defaults to Seedance 2.0; use model seedance-2.0-fast for a faster draft. Use referenceVideos for one original MP4/MOV video reference and referenceImages separately for SKU identity. Provider keys stay on the server.",
       inputSchema: {
         prompt: z.string().min(1).max(100_000),
         provider: providerSchema.optional(),
@@ -410,6 +522,7 @@ function createServer(): McpServer {
         size: z.string().max(40).optional(),
         generateAudio: z.boolean().optional(),
         referenceImages: z.array(imageInputSchema).max(4).optional(),
+        referenceVideos: z.array(videoInputSchema).max(1).optional(),
       },
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     },
@@ -446,28 +559,16 @@ function createServer(): McpServer {
 }
 
 async function handleMcpRequest(request: Request, response: Response) {
-  const suppliedSessionId = request.header("mcp-session-id");
-  let session = suppliedSessionId ? sessions.get(suppliedSessionId) : undefined;
-
-  if (suppliedSessionId && !session) {
-    response.status(400).json({ error: "unknown_mcp_session" });
-    return;
-  }
-
-  if (!session) {
-    const server = createServer();
-    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomBytes(16).toString("hex") });
-    session = { server, transport, lastUsedAt: Date.now() };
-    await server.connect(transport);
-  }
-
-  session.lastUsedAt = Date.now();
-  await session.transport.handleRequest(request, response, request.body);
-
-  const sessionId = session.transport.sessionId;
-  if (sessionId) {
-    sessions.set(sessionId, session);
-  }
+  // Tool calls are independent, so a stateless transport avoids idle-session and restart disconnects.
+  // It also accepts stale session headers left by clients that previously used this router.
+  const server = createServer();
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  await server.connect(transport);
+  response.once("close", () => {
+    void transport.close();
+    void server.close();
+  });
+  await transport.handleRequest(request, response, request.body);
 }
 
 app.post("/mcp", requireAuth, async (request, response) => {
@@ -480,28 +581,15 @@ app.post("/mcp", requireAuth, async (request, response) => {
 });
 
 app.delete("/mcp", requireAuth, async (request, response) => {
-  const sessionId = request.header("mcp-session-id");
-  const session = sessionId ? sessions.get(sessionId) : undefined;
-  if (!session) {
-    response.status(404).json({ error: "unknown_mcp_session" });
-    return;
+  try {
+    await handleMcpRequest(request, response);
+  } catch (error) {
+    if (!response.headersSent) response.status(500).json({ error: "mcp_request_failed" });
+    console.error(error instanceof Error ? error.message : String(error));
   }
-  sessions.delete(sessionId!);
-  await session.transport.close();
-  await session.server.close();
-  response.status(204).end();
 });
 
-setInterval(() => {
-  const cutoff = Date.now() - sessionTtlMs;
-  for (const [sessionId, session] of sessions) {
-    if (session.lastUsedAt >= cutoff) continue;
-    sessions.delete(sessionId);
-    void session.transport.close();
-    void session.server.close();
-  }
-}, Math.min(sessionTtlMs, 5 * 60 * 1000)).unref();
-
+await loadRefreshTokens();
 app.listen(port, "127.0.0.1", () => {
   console.log(`ecom-ai-router-mcp listening on 127.0.0.1:${port}`);
 });

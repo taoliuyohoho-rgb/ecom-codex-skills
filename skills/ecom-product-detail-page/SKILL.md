@@ -1,12 +1,22 @@
 ---
 name: ecom-product-detail-page
 description: "Use only for ecommerce product detail-page copy and structure. Read live SKU truth, organize verified benefits/specifications/usage/package/FAQ/SEO, review claims and localization, and write an approved detail-page version back. Do not create titles, 9-image packs, ads, videos or deep research."
-version: 1.0.0
+metadata:
+  version: 1.1.0
 ---
 
 # Ecommerce Product Detail Page
 
 Create the product detail-page content package, not the product title or image pack.
+
+## Marketing Copy Composition
+
+After live SKU truth, platform rules, approved claims, and prohibited
+expressions are locked, compose `copywriting` for wide section/headline
+variants, scoring, rewriting, and de-slop. Its Marketing OS references are a
+persuasion method, not a fact source. This Skill remains the canonical owner of
+the detail-page structure, product facts, claim boundaries, localization,
+approval, and writeback.
 
 ## Required sections
 
