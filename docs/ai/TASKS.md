@@ -174,3 +174,11 @@
 - 以真实 SKU 参考图 `source-base-20260730/MZ6032-base-source.jpg` 通过 `openai / gpt-image-2` 生成 Amazon Slot 1 样片，run 为 `run-20260807T000000Z-slot01-sample`。
 - 参考图证据与源文件一致；样片为 1254×1254 PNG，白底、SKU 身份、`5g×10支` 数量关系和无新增促销/医疗叠字通过。
 - 审核结果为 `warn`：细小包装文字被模型重绘，不能作为官方包装逐字核验依据；不得直接发布或把文字当作事实证据。当前状态为 `awaiting_human_sample_approval`，等待人工决定是否接受该视觉方向；未扩展整包、未写回 Base、未发布。
+
+## 2026-11-11 Skill copies consolidated (chore/consolidate-skills)
+
+- Router source now matches the Guangzhou deployment `202608181755-video-reference`: `npm ci && npm run build` reproduces the live `dist/ai-router.js` and `dist/index.js` byte for byte.
+- Known gap: the reference-image integrity check (sha256 / MIME / size evidence) was deployed on 2026-07-29 (release `20260722113100`), but the 2026-08-13 Seedance release was built without it, and no later release has it. `ecom-nine-images` still requires that evidence, so strict runs stop as `blocked` until the check is restored (the code is uncommitted in the nine-image worktree; handle it in a separate PR).
+- `ecom-nine-images` 1.2.0 merges the Hermes install-dir edits (08-06) and the Codex copy (08-20) into main: buyer-question slot table, platform MAIN-image rule, marketplace-language rule, geometry/component invariant, platform aspect ratios, paid-ad boundary, reference reading order.
+- `ecom-business-context` 1.1.0 and `ecom-product-detail-page` 1.1.0 committed from worktree edits.
+- `video-director-core` retirement deferred: its replacement `video-production-core` is not in this repository.

@@ -32,7 +32,7 @@ This is a planning menu, not a fixed template. Use only roles supported by the S
 8. Desired-state — what everyday moment does the buyer want to return to?
 9. Ritual/closing or verified decision support — how does it belong in a personal routine, or what verified uncertainty remains?
 
-Do not force all nine roles. If the SKU lacks verified directions, compatibility, or a supportable claim, replace the slot only with a non-factual lifestyle/ritual role that does not imply the missing fact.
+Do not force all nine roles. If the SKU lacks verified directions, compatibility, or a supportable claim, show the evidence gap and replace the slot only with a non-factual lifestyle/ritual role that does not imply the missing fact.
 
 ## Sensitive Personal-Care Guidance
 
@@ -43,10 +43,10 @@ Do not force all nine roles. If the SKU lacks verified directions, compatibility
 
 ## Decision-Support Test
 
-Use a decision-support image only if it resolves a buyer question that is both existing and source-verifiable. Reject a defensive question-and-answer treatment when it makes the viewer ask a problem they were not already considering, especially medicine, disease, safety, or treatment questions.
+Use a decision-support image only if it resolves a buyer question that is both existing and source-verifiable. It must improve the decision, not manufacture a concern. Reject a defensive question-and-answer treatment when it makes the viewer ask a problem they were not already considering, especially medicine, disease, safety, or treatment questions.
 
 Without real review evidence, never imitate a review. An unquoted affirmative lifestyle thought is allowed when classified as `non_factual_lifestyle_copy`; it must not use stars, a username, date, testimonial framing, first-person outcome, or a claim that a product caused a result.
 
 ## Iterative User Feedback
 
-When the human reviewer says “this is the same as the previous one,” replace the weak mission before regenerating. Do not solve a structural duplication problem with a new color, angle, headline, or prop alone.
+When the human reviewer says “this is the same as the previous one,” first state the old and new slot missions in one sentence each. Replace the weak mission before regenerating. Do not solve a structural duplication problem with a new color, angle, headline, or prop alone.
