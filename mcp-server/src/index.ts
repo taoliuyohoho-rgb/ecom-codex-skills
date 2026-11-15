@@ -68,6 +68,26 @@ function tokenMatches(request: Request): boolean {
   return Boolean(session && session.expiresAt > Date.now());
 }
 
+function callerOf(request: Request): string {
+  const header = request.header("authorization") || "";
+  const supplied = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+  return accessTokens.get(supplied)?.userOpenId || (supplied ? "service-token" : "anonymous");
+}
+
+const usageLogPath = process.env.USAGE_LOG_PATH?.trim() || "/opt/ecom-ai-router/usage.jsonl";
+
+async function logUsage(caller: string, tool: string, result: any): Promise<void> {
+  // One line per paid call: who, what, which model, provider-reported usage. Best effort only.
+  try {
+    const { appendFile } = await import("node:fs/promises");
+    const line = JSON.stringify({ at: new Date().toISOString(), caller, tool, provider: result?.provider,
+      model: result?.model, usage: result?.usage ?? result?.raw?.usage, status: result?.status });
+    await appendFile(usageLogPath, line + "\n", { mode: 0o600 });
+  } catch (error) {
+    console.error(`usage log failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 function requireAuth(request: Request, response: Response, next: () => void) {
   if (!tokenMatches(request)) {
     if (oauthEnabled) {
@@ -432,7 +452,7 @@ const videoInputSchema = z.object({
   mimeType: z.enum(["video/mp4", "video/quicktime"]).optional(),
 }).refine((value) => Boolean(value.dataUrl || value.url || value.materialId), "dataUrl, url, or materialId is required");
 
-function createServer(): McpServer {
+function createServer(caller = "anonymous"): McpServer {
   const server = new McpServer({
     name: "ecom-ai-router-mcp-server",
     version: process.env.SERVICE_VERSION || "0.1.0",
@@ -456,11 +476,13 @@ function createServer(): McpServer {
     },
     async (input) => {
       const result = await aiRuntime.text.generate(input);
+      await logUsage(caller, "text", result);
       return {
         content: [{ type: "text", text: JSON.stringify({
           provider: result.provider,
           model: result.model,
           text: result.text,
+          usage: result.usage,
           status: result.status || "completed",
         }) }],
       };
@@ -487,11 +509,13 @@ function createServer(): McpServer {
     },
     async (input) => {
       const result = await aiRuntime.image.generate(input);
+      await logUsage(caller, "image", result);
       const metadata = {
         provider: result.provider,
         model: result.model,
         status: result.status || "completed",
         text: result.text,
+        usage: result.usage,
       };
       const content: Array<{ type: "text"; text: string } | { type: "image"; data: string; mimeType: string }> = [
         { type: "text", text: JSON.stringify(metadata) },
@@ -521,6 +545,7 @@ function createServer(): McpServer {
         seconds: z.number().int().min(1).max(60).optional(),
         size: z.string().max(40).optional(),
         generateAudio: z.boolean().optional(),
+        resolution: z.enum(["480p", "720p", "1080p"]).optional(),
         referenceImages: z.array(imageInputSchema).max(4).optional(),
         referenceVideos: z.array(videoInputSchema).max(1).optional(),
       },
@@ -528,6 +553,7 @@ function createServer(): McpServer {
     },
     async (input) => {
       const result = await aiRuntime.video.generate(input);
+      await logUsage(caller, "video_start", result);
       return { content: [{ type: "text", text: JSON.stringify({
         provider: result.provider,
         model: result.model,
@@ -551,6 +577,26 @@ function createServer(): McpServer {
     },
     async ({ provider, jobId, model }) => {
       const result = await aiRuntime.video.poll(provider, jobId, model);
+      if (result?.status === "succeeded") await logUsage(caller, "video_done", { provider, model: result?.model, usage: result?.usage, status: jobId });
+      return { content: [{ type: "text", text: JSON.stringify(result) }] };
+    },
+  );
+
+  server.registerTool(
+    "ecom_router_speech_generate",
+    {
+      title: "Ecommerce Router Speech Generate",
+      description: "Text to speech through the team AI Router (Gemini TTS). Send only the words to be spoken; returns base64 WAV. Provider keys stay on the server.",
+      inputSchema: {
+        text: z.string().min(1).max(5_000).describe("Exactly the words to speak, nothing else"),
+        voice: z.string().max(40).optional().describe("Gemini prebuilt voice, e.g. Kore, Charon"),
+        model: z.string().max(200).optional(),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    },
+    async (input) => {
+      const result = await aiRuntime.speech.generate(input);
+      await logUsage(caller, "speech", result);
       return { content: [{ type: "text", text: JSON.stringify(result) }] };
     },
   );
@@ -561,7 +607,7 @@ function createServer(): McpServer {
 async function handleMcpRequest(request: Request, response: Response) {
   // Tool calls are independent, so a stateless transport avoids idle-session and restart disconnects.
   // It also accepts stale session headers left by clients that previously used this router.
-  const server = createServer();
+  const server = createServer(callerOf(request));
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   await server.connect(transport);
   response.once("close", () => {

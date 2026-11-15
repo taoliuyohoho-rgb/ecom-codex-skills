@@ -56,6 +56,13 @@ export type VideoGenerateRequest = {
   referenceImages?: Array<{ dataUrl?: string; url?: string; mimeType?: string }>;
   referenceVideos?: Array<{ dataUrl?: string; url?: string; materialId?: string; mimeType?: string }>;
   generateAudio?: boolean;
+  resolution?: string;
+};
+
+export type SpeechGenerateRequest = {
+  text: string;
+  voice?: string;
+  model?: string;
 };
 
 type ProviderProfile = {
@@ -388,7 +395,7 @@ async function generateText(req: TextGenerateRequest): Promise<any> {
         body: JSON.stringify(body),
       });
       const text = data?.candidates?.[0]?.content?.parts?.map((part: any) => part.text).filter(Boolean).join("\n");
-      return { provider: profile.provider, model: profile.model, text, raw: data };
+      return { provider: profile.provider, model: profile.model, text, usage: data?.usageMetadata, raw: data };
     }
 
     const prompt =
@@ -469,11 +476,11 @@ async function generateImage(req: ImageGenerateRequest): Promise<any> {
       size: req.size || "1024x1024",
     };
     if (profile.provider === "doubao") {
+      const reference = req.referenceImage?.dataUrl || req.referenceImage?.url;
       body.response_format = "b64_json";
-      body.extra_body = {
-        watermark: false,
-        reference_image: req.referenceImage?.dataUrl || req.referenceImage?.url,
-      };
+      body.watermark = false;
+      if (reference) body.image = reference;
+      body.extra_body = { watermark: false, reference_image: reference };
     } else if (profile.provider === "openai") {
       body.quality = req.quality || env("OPENAI_IMAGE_QUALITY") || undefined;
       body.output_format = req.outputFormat || "png";
@@ -487,7 +494,7 @@ async function generateImage(req: ImageGenerateRequest): Promise<any> {
           : { authorization: `Bearer ${profile.key}`, "content-type": "application/json" },
       body: JSON.stringify(body),
     });
-    return { provider: profile.provider, model: profile.model, images: data?.data, raw: data };
+    return { provider: profile.provider, model: profile.model, images: data?.data, usage: data?.usage, raw: data };
   });
 }
 
@@ -524,6 +531,7 @@ async function generateVideo(req: VideoGenerateRequest): Promise<any> {
           content,
           duration: req.seconds,
           ratio: req.ratio || "16:9",
+          ...(req.resolution ? { resolution: req.resolution } : {}),
           watermark: false,
           generate_audio: req.generateAudio ?? false,
         }),
@@ -588,6 +596,39 @@ async function pollVideo(provider: AiProvider, jobId: string, model?: string): P
   });
 }
 
+function pcmToWav(pcm: Buffer, rate = 24_000): Buffer {
+  const header = Buffer.alloc(44);
+  header.write("RIFF", 0); header.writeUInt32LE(36 + pcm.length, 4); header.write("WAVE", 8);
+  header.write("fmt ", 12); header.writeUInt32LE(16, 16); header.writeUInt16LE(1, 20); header.writeUInt16LE(1, 22);
+  header.writeUInt32LE(rate, 24); header.writeUInt32LE(rate * 2, 28); header.writeUInt16LE(2, 32); header.writeUInt16LE(16, 34);
+  header.write("data", 36); header.writeUInt32LE(pcm.length, 40);
+  return Buffer.concat([header, pcm]);
+}
+
+async function generateSpeech(req: SpeechGenerateRequest): Promise<any> {
+  const profile = providerProfile("gemini", "text", req.model || env("GEMINI_TTS_MODEL") || "gemini-3.8-flash-tts");
+  if (!profile) throw new Error("Gemini is not configured in this router");
+  if (!realCallsEnabled()) return { status: "dry-run", provider: "gemini", model: profile.model };
+  if (!profile.key) throw new Error("Missing API key for gemini");
+  // Only the words go to the model: a TTS model reads any instruction text aloud.
+  const data = await requestJson(`${trimSlash(profile.baseUrl)}/models/${profile.model}:generateContent`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-goog-api-key": profile.key },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: req.text }] }],
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: req.voice || "Kore" } } },
+      },
+    }),
+  });
+  const inline = data?.candidates?.[0]?.content?.parts?.find((part: any) => part.inlineData)?.inlineData;
+  if (!inline?.data) throw new Error("Gemini returned no audio");
+  const raw = Buffer.from(inline.data, "base64");
+  const wav = raw.subarray(0, 4).toString() === "RIFF" ? raw : pcmToWav(raw);
+  return { provider: "gemini", model: profile.model, mimeType: "audio/wav", data: wav.toString("base64"), usage: data?.usageMetadata };
+}
+
 export const aiRuntime = {
   env: {
     load: loadAiEnvFiles,
@@ -598,6 +639,7 @@ export const aiRuntime = {
   text: { generate: generateText },
   image: { generate: generateImage },
   video: { generate: generateVideo, poll: pollVideo },
+  speech: { generate: generateSpeech },
 };
 
 export default aiRuntime;
